@@ -100,7 +100,7 @@
       <div class="flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-zinc-300">
         <div class="hidden md:flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="dataset-badge">Verified Real Kaggle Data (973 Records)</span>
+          <span>Verified Real Kaggle Data (973 Records)</span>
         </div>
         <div class="badge-slash text-xs">
           <span id="hero-f1">Model metrics: loading…</span>
@@ -289,11 +289,6 @@
             </div>
           </div>
 
-          <div class="mt-3 flex items-center gap-3 text-xs">
-            <button onclick="exportRepsCsv()" class="px-3 py-1.5 bg-zinc-800 border border-zinc-600 text-white font-bold hover:bg-zinc-700">⬇ Export reps CSV (for labeling)</button>
-            <span class="text-zinc-400">Recorded reps: <b id="rep-log-count" class="text-white">0</b></span>
-          </div>
-
           <!-- Dynamic Arabic/English Coach Verdict Banner -->
           <div id="coach-verdict-box" class="mt-3 p-4 bg-[#19191f] border-l-4 border-zinc-500 transition-all">
             <p id="coach-verdict-title" class="font-bold text-sm text-white">🏋️‍♂️ اختار التمرين وارفع الفيديو عشان الموديل يقيم أداءك</p>
@@ -396,8 +391,6 @@
 
     let poseEngine = null;
     let goodReps = 0, badReps = 0, repStage = 'down';
-    // log of every rep, for the csv export
-    let repLog = [], repStartT = 0, sessionId = Date.now();
     let maxLeanInRep = 0, minSymInRep = 100, minAngleInRep = 180, maxAngleInRep = 0;
     let frameCount = 0;
     let recentLeans = [], recentSyms = [], recentROMs = [];
@@ -582,22 +575,13 @@
     });
 
     function resetTrackingStats() {
-      goodReps = 0; badReps = 0; repStage = 'down'; sessionId = Date.now();
+      goodReps = 0; badReps = 0; repStage = 'down';
       maxLeanInRep = 0; minSymInRep = 100; minAngleInRep = 180; maxAngleInRep = 0; frameCount = 0;
       recentLeans = []; recentSyms = []; recentROMs = [];
       angleHistoryArms = []; angleHistoryLegs = []; angleHistoryShoulders = [];
       document.getElementById('live-good-reps').innerText = "0";
       document.getElementById('live-bad-reps').innerText = "0";
       document.getElementById('analysis-counter').innerText = "0 Frames";
-    }
-
-    function exportRepsCsv() {
-      if (!repLog.length) { alert('No reps recorded yet.'); return; }
-      const cols = Object.keys(repLog[0]);
-      const csv = [cols.join(',')].concat(repLog.map(r => cols.map(c => r[c]).join(','))).join('\n');
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-      a.download = 'movement_reps.csv'; a.click();
     }
 
     function stdDev(arr) {
@@ -635,7 +619,6 @@
         Resting_BPM: optNum('inp-restbpm'), Water_Intake_liters: optNum('inp-water'),
         torso_lean_deg: Number(avgLean.toFixed(1)),
         symmetry_score: Number(avgSym.toFixed(1)),
-        good_reps: goodReps,
         bad_reps: badReps
       };
 
@@ -818,21 +801,13 @@
               recentROMs.push(rom); if (recentROMs.length > 15) recentROMs.shift();
 
               const isBadRep = (maxLeanInRep > cfg.maxAllowedLean || minSymInRep < 78.0 || rom < 35.0);
-              repLog.push({
-                session_id: sessionId, exercise: activeEx, video_time_s: videoEl.currentTime.toFixed(2),
-                rep_duration_s: Math.max(0, videoEl.currentTime - repStartT).toFixed(2),
-                min_angle: minAngleInRep.toFixed(1), max_angle: maxAngleInRep.toFixed(1), rom: rom.toFixed(1),
-                max_lean: maxLeanInRep.toFixed(1), min_symmetry: minSymInRep.toFixed(1),
-                heuristic_label: isBadRep ? 'bad' : 'good', human_label: ''
-              });
-              document.getElementById('rep-log-count').innerText = repLog.length;
               if (isBadRep) { badReps++; } else { goodReps++; }
               maxLeanInRep = 0; minSymInRep = 100; minAngleInRep = 180; maxAngleInRep = 0;
             }
             repStage = 'down';
           }
           if (mainAngle < cfg.upThreshold && repStage === 'down') {
-            repStage = 'up'; repStartT = videoEl.currentTime;
+            repStage = 'up';
           }
 
           document.getElementById('live-good-reps').innerText = goodReps;

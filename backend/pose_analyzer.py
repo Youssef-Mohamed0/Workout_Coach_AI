@@ -98,6 +98,4 @@ class SmartGymPoseAnalyzer:
             "injury_risk_label": "High Injury / Overtraining Risk" if overall >= 50 else "Safe & Optimal Performance",
             "is_anomaly": bool(is_anom),
             "anomaly_status": "⚠️ DANGER: Biometric / Pose Anomaly Flagged!" if is_anom else "✅ Normal Pattern",
-            "biometric_model_risk_pct": physio_risk,
-            "pose_camera_penalty_pct": mv_risk,   # same as movement_risk_pct, kept for the page
         }

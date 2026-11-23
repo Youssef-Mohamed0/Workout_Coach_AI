@@ -1,11 +1,6 @@
-# Workout Coach AI
+# Workout Coach AI (SmartGym AI)
 
 > **Dual-Track Real-Time Biomechanics & Classical ML Fitness Lab** — Combining browser-based **MediaPipe Pose** computer vision with a multi-stage **Scikit-Learn** pipeline trained on 973 real Kaggle gym member records.
-
-
-
-
-
 
 ---
 
@@ -25,7 +20,6 @@
 - **Dynamic Cluster Naming:** Automatically generates human-readable English and Arabic cluster profiles directly from standardized cluster centroids (`backend/cluster_naming.py`).
 - **Smartwatch-Optional Inference:** Requires only 4 body/session fields (`Age`, `Weight_kg`, `Height_m`, `Session_Duration_min`); missing smartwatch fields are imputed with training medians, and physiological risk is only scored when heart-rate/hydration values are actually provided.
 - **Bilingual Coach Verdict:** Displays real-time Arabic/English coaching feedback that distinguishes between form issues (spine lean, asymmetry, bad reps) and physiological risk flags (high HR, low hydration, long session).
-- **Rep Labeling & Export:** Built-in CSV export (`movement_reps.csv`) to label reps (`good` / `bad`) and train a dedicated movement classifier (`backend/train_movement.py`).
 
 ---
 
@@ -49,7 +43,6 @@ The backend pipeline (`backend/ml_pipeline.py`) trains on `backend/data/gym_memb
 ```text
 Workout_Coach_AI/
 ├── backend/
-│   ├── __init__.py
 │   ├── api.py                   # FastAPI server, Pydantic validation, CORS & routes
 │   ├── config.py                # Paths, FEATURE_COLS & PHYSIO_KEYS
 │   ├── ml_pipeline.py           # End-to-end training, evaluation & model serialization
@@ -57,10 +50,8 @@ Workout_Coach_AI/
 │   ├── cluster_naming.py        # Automatic EN/AR cluster descriptions from z-scores
 │   ├── pose_analyzer.py         # Model loader & biometric + pose fusion engine
 │   ├── pose_math.py             # 2D joint angles, torso lean, symmetry & movement risk
-│   ├── train_movement.py        # Optional supervised classifier for labeled rep CSVs
 │   └── data/
-│       ├── gym_members_clean.csv              # Cleaned dataset (973 rows, 14 cols)
-│       └── gym_members_exercise_tracking.csv  # Raw Kaggle dataset (973 rows, 15 cols)
+│       └── gym_members_clean.csv              # Cleaned dataset (973 rows, 14 cols)
 ├── frontend/
 │   └── index.html               # Single-page dashboard (Tailwind, Chart.js, MediaPipe Pose)
 ├── notebooks/
@@ -147,32 +138,4 @@ The `notebooks/` directory is completely decoupled from the FastAPI backend—ed
    jupyter lab
    ```
 3. Load datasets using relative paths from inside `notebooks/`:
-   - Cleaned data: `../backend/data/gym_members_clean.csv`
-   - Raw Kaggle data: `../backend/data/gym_members_exercise_tracking.csv`
-
----
-
-## Optional: Training the Custom Movement Classifier
-
-1. Upload a workout video in the dashboard and record reps.
-2. Click **Export reps CSV (for labeling)** to download `movement_reps.csv`.
-3. Fill in the `human_label` column (`good` or `bad`) for at least **40 reps** (minimum **10 per class**).
-4. Place the file at `backend/data/movement_reps.csv` and run:
-   ```bash
-   python -m backend.train_movement
-   ```
-   This evaluates Logistic Regression vs. Random Forest using `GroupKFold` (by session) or `StratifiedKFold` and saves the best model to `backend/models/movement_model.pkl`.
-
----
-
-## Recommended `.gitignore`
-
-Before collaborating on Git, make sure your `.gitignore` excludes generated models, caches, and environments:
-
-```gitignore
-.venv/
-__pycache__/
-*.pyc
-.ipynb_checkpoints/
-backend/models/*.pkl
-```
+   - Data: `../backend/data/gym_members_clean.csv`

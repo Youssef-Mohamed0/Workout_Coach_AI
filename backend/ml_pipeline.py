@@ -23,16 +23,6 @@ from backend.features import enhance_features
 SEED = 42
 
 
-# the rule that made the Overtraining_Risk_Label column in the csv:
-# 1 if max heart rate is over 96% of (220 - age), or avg heart rate is high with little water,
-# or resting heart rate is high with a long session
-def build_rule_label(df: pd.DataFrame) -> pd.Series:
-    ratio = df["Max_BPM"] / (220.0 - df["Age"])
-    return ((ratio > 0.96)
-            | ((df["Avg_BPM"] > 155) & (df["Water_Intake_liters"] < 2.0))
-            | ((df["Resting_BPM"] > 82) & (df["Session_Duration_min"] > 85))).astype(int)
-
-
 # the random forest we use for classification (same settings every time)
 def _rf_clf():
     return RandomForestClassifier(n_estimators=200, max_depth=12, class_weight="balanced", random_state=SEED)

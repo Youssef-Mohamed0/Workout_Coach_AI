@@ -45,7 +45,6 @@ class BiometricPoseInput(BaseModel):
     # numbers from the camera (MediaPipe)
     torso_lean_deg: float = Field(default=0.0, ge=0, le=90)
     symmetry_score: float = Field(default=100.0, ge=0, le=100)
-    good_reps: int = Field(default=0, ge=0, le=1000)
     bad_reps: int = Field(default=0, ge=0, le=1000)
 
     # avg heart rate can not be higher than max heart rate
@@ -71,14 +70,11 @@ def _overview() -> dict:
     Xp = a.pca.transform(Xs)
     clusters = a.kmeans.predict(Xs)
     anom = a.iso_forest.predict(Xs) == -1
-    wt = df["Workout_Type"] if "Workout_Type" in df else pd.Series(["Gym"] * len(df))
     points = [{"pca1": round(float(p1), 3), "pca2": round(float(p2), 3), "cluster": int(c),
-               "is_anomaly": bool(an), "calories": float(cal), "workout_type": str(w)}
-              for p1, p2, c, an, cal, w in zip(Xp[:, 0], Xp[:, 1], clusters, anom, df["Calories_Burned"], wt)]
+               "is_anomaly": bool(an), "calories": float(cal)}
+              for p1, p2, c, an, cal in zip(Xp[:, 0], Xp[:, 1], clusters, anom, df["Calories_Burned"])]
     return {
-        "dataset_source": "Gym Members Exercise Dataset (Kaggle)",
         "total_records": int(len(df)),
-        "features_count": len(FEATURE_COLS),
         "pca_explained_variance": round(float(a.pca.explained_variance_ratio_.sum() * 100), 2),
         "pca_explained_variance_2d": round(float(a.pca.explained_variance_ratio_[:2].sum() * 100), 2),
         "total_anomalies": int(anom.sum()),
@@ -98,4 +94,4 @@ def get_dataset_overview():
 @app.post("/api/analyze-biometrics")
 def analyze_biometrics(data: BiometricPoseInput):
     payload = data.model_dump()
-    return {"input_metrics": payload, "ml_results": get_analyzer().evaluate_real_biometrics_and_pose(payload)}
+    return {"ml_results": get_analyzer().evaluate_real_biometrics_and_pose(payload)}
