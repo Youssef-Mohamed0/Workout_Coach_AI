@@ -1,654 +1,1479 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MARUTHI GYM PRO — 100% Real Kaggle Data & Biomechanics Lab</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
-  <!-- Google MediaPipe Pose JS -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <title>Workout Coach AI — Biomechanics & Biometric Lab</title>
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1675466124/drawing_utils.js" crossorigin="anonymous"></script>
 
   <style>
-    :root {
-      --gym-red: #e31b23;
-      --gym-black: #0a0a0c;
-      --gym-card: #131316;
-      --gym-border: #26262b;
+    /* Semantic Design Tokens: Dark (default) & Light themes */
+    :root,
+    [data-theme="dark"] {
+      --bg-canvas: #0b0d11;
+      --bg-header: rgba(15, 18, 24, 0.94);
+      --bg-surface: #131720;
+      --bg-surface-muted: #1a202c;
+      --bg-input: #0e1219;
+      --border-subtle: #273042;
+      --border-strong: #3b475e;
+      --text-primary: #f3f5f8;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --accent: #ef4444;
+      --accent-hover: #dc2626;
+      --accent-text: #f87171;
+      --accent-on: #ffffff;
+      --safe: #10b981;
+      --safe-text: #34d399;
+      --safe-surface: rgba(16, 185, 129, 0.12);
+      --warn: #f59e0b;
+      --warn-text: #fbbf24;
+      --warn-surface: rgba(245, 158, 11, 0.14);
+      --danger: #ef4444;
+      --danger-text: #fca5a5;
+      --danger-surface: rgba(239, 68, 68, 0.14);
+      --info: #38bdf8;
+      --chart-grid: #1f2737;
+      --chart-tick: #94a3b8;
+      --focus-ring: #60a5fa;
+      --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.35);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-display: 'Space Grotesk', 'Inter', sans-serif;
+      --font-arabic: 'IBM Plex Sans Arabic', 'Inter', system-ui, sans-serif;
+      color-scheme: dark;
     }
-    body {
-      background-color: var(--gym-black);
-      color: #ffffff;
-      font-family: 'Montserrat', sans-serif;
-      background-image: 
-        radial-gradient(circle at 85% 10%, rgba(227, 27, 35, 0.14), transparent 35%),
-        radial-gradient(circle at 10% 80%, rgba(227, 27, 35, 0.08), transparent 40%);
+
+    [data-theme="light"] {
+      --bg-canvas: #f4f6f9;
+      --bg-header: rgba(255, 255, 255, 0.94);
+      --bg-surface: #ffffff;
+      --bg-surface-muted: #eef2f7;
+      --bg-input: #ffffff;
+      --border-subtle: #d5dce6;
+      --border-strong: #94a3b8;
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #475569;
+      --accent: #b91c1c;
+      --accent-hover: #991b1b;
+      --accent-text: #b91c1c;
+      --accent-on: #ffffff;
+      --safe: #047857;
+      --safe-text: #065f46;
+      --safe-surface: #ecfdf5;
+      --warn: #b45309;
+      --warn-text: #92400e;
+      --warn-surface: #fffbeb;
+      --danger: #b91c1c;
+      --danger-text: #991b1b;
+      --danger-surface: #fef2f2;
+      --info: #0369a1;
+      --chart-grid: #e2e8f0;
+      --chart-tick: #475569;
+      --focus-ring: #1d4ed8;
+      --shadow-card: 0 6px 20px rgba(15, 23, 42, 0.07);
+      color-scheme: light;
     }
-    .font-gym { font-family: 'Oswald', sans-serif; letter-spacing: 0.04em; text-transform: uppercase; }
-    .gym-card {
-      background: var(--gym-card);
-      border: 1px solid var(--gym-border);
-      position: relative;
-      overflow: hidden;
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100dvh;
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
-    .gym-card::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0;
-      width: 4px; height: 100%;
-      background: var(--gym-red);
+
+    .font-display { font-family: var(--font-display); }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    .rtl-block {
+      direction: rtl;
+      text-align: start;
+      font-family: var(--font-arabic);
     }
-    .btn-maruthi {
-      background: var(--gym-red);
-      color: #fff;
-      font-family: 'Oswald', sans-serif;
+
+    :focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1280px;
+      margin-inline: auto;
+      padding-inline: 16px;
+    }
+
+    @media (min-width: 768px) {
+      .container { padding-inline: 24px; }
+    }
+
+    /* Header */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border-subtle);
+      backdrop-filter: blur(10px);
+    }
+
+    .header-inner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-block: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      background: var(--accent);
+      color: var(--accent-on);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      line-height: 1.15;
+    }
+
+    .brand-title span { color: var(--accent-text); }
+
+    .brand-sub {
+      margin: 2px 0 0;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface-muted);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      max-width: 100%;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--safe);
+      flex-shrink: 0;
+    }
+
+    /* Hero KPI Strip */
+    .hero-strip {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .hero-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-block: 18px;
+    }
+
+    @media (min-width: 960px) {
+      .hero-inner {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+    }
+
+    .hero-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      transform: skewX(-10deg);
-      transition: all 0.25s ease;
+      color: var(--accent-text);
     }
-    .btn-maruthi:hover:not(:disabled) {
-      background: #ff242d;
-      box-shadow: 0 0 20px rgba(227, 27, 35, 0.5);
+
+    .hero-heading {
+      margin: 4px 0 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.35rem, 3vw, 2rem);
+      font-weight: 700;
+      line-height: 1.15;
     }
-    .btn-maruthi span { display: inline-block; transform: skewX(10deg); }
-    .btn-dark-skew {
-      background: #1d1d22;
-      border: 1px solid #32323a;
-      color: #e4e4e7;
-      font-family: 'Oswald', sans-serif;
+
+    .hero-heading span { color: var(--accent-text); }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .hero-stat {
+      padding: 10px 12px;
+      background: var(--bg-surface-muted);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      min-width: 0;
+    }
+
+    .hero-stat-label {
+      display: block;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .hero-stat-val {
+      display: block;
+      margin-top: 2px;
+      font-family: var(--font-display);
+      font-size: clamp(0.95rem, 2vw, 1.25rem);
+      font-weight: 700;
+      color: var(--text-primary);
+      overflow-wrap: anywhere;
+    }
+
+    .hero-stat-val.accent { color: var(--accent-text); }
+    .hero-stat-val.info { color: var(--info); }
+
+    /* Main layout */
+    .main-content {
+      padding-block: 24px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+    }
+
+    @media (min-width: 1024px) {
+      .workspace-grid {
+        grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+        align-items: start;
+      }
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+      min-width: 0;
+    }
+
+    @media (min-width: 640px) {
+      .card { padding: 22px; }
+    }
+
+    .card-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .section-tag {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      transform: skewX(-10deg);
-      transition: all 0.2s ease;
+      color: var(--accent-text);
     }
-    .btn-dark-skew:hover:not(:disabled) { border-color: var(--gym-red); color: #fff; }
-    .btn-dark-skew span { display: inline-block; transform: skewX(10deg); }
-    .badge-slash {
-      background: var(--gym-red);
-      color: #fff;
-      font-family: 'Oswald', sans-serif;
-      padding: 2px 12px;
-      transform: skewX(-12deg);
-      display: inline-block;
+
+    .card-title {
+      margin: 2px 0 0;
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
     }
-    .badge-slash span { display: inline-block; transform: skewX(12deg); }
-    input[type="range"] { accent-color: var(--gym-red); }
+
+    /* Form Controls (>= 44px touch targets) */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .field-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .control {
+      width: 100%;
+      min-height: 44px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      background: var(--bg-input);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: border-color 0.15s ease;
+    }
+
+    .control:hover { border-color: var(--accent); }
+    .control[aria-invalid="true"] { border-color: var(--danger); }
+
+    select.control {
+      cursor: pointer;
+      max-width: 100%;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 44px;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      background: var(--bg-surface-muted);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover:not(:disabled) { border-color: var(--accent); }
+    .btn:disabled { opacity: 0.48; cursor: not-allowed; }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-on);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .btn-active {
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+
+    /* Tracking banner & Video box */
+    .tracking-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface-muted);
+      border-inline-start: 4px solid var(--accent);
+      font-size: 0.8125rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-text);
+    }
+
+    .video-stage {
+      position: relative;
+      width: 100%;
+      min-height: 240px;
+      aspect-ratio: 16 / 9;
+      background: #05070a;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-stage canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .video-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      background: rgba(11, 13, 17, 0.92);
+      color: #f3f5f8;
+    }
+
+    .video-placeholder.hidden,
+    .hidden { display: none !important; }
+
+    .placeholder-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background: var(--accent);
+      color: var(--accent-on);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .playback-bar {
+      margin-top: 12px;
+      padding: 10px;
+      background: var(--bg-surface-muted);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .seek-wrap {
+      flex: 1 1 160px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .seek-range {
+      width: 100%;
+      min-height: 44px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .time-readout {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    /* Responsive Scoreboard: 2 cols on mobile -> 5 cols on tablet/desktop */
+    .scoreboard {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    @media (min-width: 640px) {
+      .scoreboard { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    }
+
+    .metric-tile {
+      padding: 10px 8px;
+      background: var(--bg-surface-muted);
+      border: 1px solid var(--border-subtle);
+      border-bottom: 3px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      text-align: center;
+      min-width: 0;
+    }
+
+    .metric-tile.safe { border-bottom-color: var(--safe); }
+    .metric-tile.danger { border-bottom-color: var(--danger); }
+    .metric-tile.warn { border-bottom-color: var(--warn); }
+    .metric-tile.info { border-bottom-color: var(--info); }
+
+    .metric-tile-label {
+      display: block;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .metric-tile-val {
+      display: block;
+      margin-top: 4px;
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .metric-tile.safe .metric-tile-val { color: var(--safe-text); }
+    .metric-tile.danger .metric-tile-val { color: var(--accent-text); }
+    .metric-tile.warn .metric-tile-val { color: var(--warn-text); }
+    .metric-tile.info .metric-tile-val { color: var(--info); }
+
+    .upload-row {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .file-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--accent);
+      color: var(--accent-on);
+      font-size: 0.8125rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .file-label:hover { background: var(--accent-hover); }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Biometrics Form Grid: 2 cols mobile -> 4 cols sm+ */
+    .bio-panel {
+      padding: 14px;
+      background: var(--bg-surface-muted);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bio-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    @media (min-width: 540px) {
+      .bio-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    .smartwatch-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .alert-box {
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      border-inline-start: 4px solid var(--border-strong);
+      background: var(--bg-surface-muted);
+      font-size: 0.8125rem;
+    }
+
+    .alert-box.safe {
+      background: var(--safe-surface);
+      border-color: var(--safe);
+      border-inline-start-color: var(--safe);
+    }
+
+    .alert-box.warn {
+      background: var(--warn-surface);
+      border-color: var(--warn);
+      border-inline-start-color: var(--warn);
+    }
+
+    .alert-box.danger {
+      background: var(--danger-surface);
+      border-color: var(--danger);
+      border-inline-start-color: var(--danger);
+    }
+
+    .result-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .result-card {
+      padding: 12px 14px;
+      background: var(--bg-surface-muted);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    .result-card.danger {
+      background: var(--danger-surface);
+      border-color: var(--danger);
+    }
+
+    .result-card.safe { border-color: var(--safe); }
+
+    .result-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--safe);
+      transition: width 0.25s ease;
+    }
+
+    .progress-fill.danger { background: var(--danger); }
+
+    /* Chart Section */
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 360px;
+    }
+
+    @media (min-width: 768px) {
+      .chart-wrap { height: 340px; }
+    }
+
+    .academic-box {
+      margin-top: 16px;
+      padding: 14px 16px;
+      background: var(--bg-surface-muted);
+      border: 1px solid var(--border-subtle);
+      border-inline-start: 4px solid var(--accent);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+      }
+    }
   </style>
 </head>
-<body class="min-h-screen pb-16">
-
-  <!-- TOP NAVBAR -->
-  <header class="border-b border-zinc-800 bg-[#0d0d10]/95 sticky top-0 z-50 backdrop-blur-md">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex flex-wrap justify-between items-center gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-11 h-11 bg-[#e31b23] flex items-center justify-center font-gym text-2xl font-bold tracking-wider" style="transform: skewX(-10deg);">
-          <span style="transform: skewX(10deg);">M</span>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6.5 6.5v11M17.5 6.5v11M3 9v6M21 9v6M6.5 12h11" />
+          </svg>
         </div>
         <div>
-          <h1 class="font-gym text-2xl md:text-3xl font-bold tracking-wider text-white leading-none">
-            MARUTHI <span class="text-[#e31b23]">FITNESS</span> LAB
-          </h1>
-          <p class="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mt-0.5">
-            Kaggle Gym Members Dataset & MediaPipe Pose
-          </p>
+          <h1 class="brand-title">WORKOUT COACH <span>AI</span></h1>
+          <p class="brand-sub">SmartGym Biometrics &amp; MediaPipe Pose Lab</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-zinc-300">
-        <div class="hidden md:flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Verified Real Kaggle Data (973 Records)</span>
+      <div class="header-actions">
+        <div class="status-pill">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="hero-f1" class="tabular-nums">Loading dataset metrics...</span>
         </div>
-        <div class="badge-slash text-xs">
-          <span id="hero-f1">Model metrics: loading…</span>
-        </div>
+        <button id="btn-theme" type="button" class="btn" aria-pressed="false" aria-label="Switch color theme">
+          <span id="theme-label">Light Mode</span>
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- HERO BANNER STRIP -->
-  <section class="relative border-b border-zinc-800/80 bg-gradient-to-r from-[#121216] via-[#1a1114] to-[#0d0d10]">
-    <div class="max-w-7xl mx-auto px-6 py-5 flex flex-wrap items-center justify-between gap-4">
+  <section class="hero-strip" aria-label="Dataset summary">
+    <div class="container hero-inner">
       <div>
-        <span class="text-xs font-extrabold uppercase tracking-widest text-[#e31b23]">● Dual-Track Real Data + Computer Vision</span>
-        <h2 class="font-gym text-3xl md:text-4xl font-bold text-white mt-1">
-          PERFECT YOUR <span class="text-[#e31b23]">FORM.</span> PROTECT YOUR <span class="text-[#e31b23]">BODY.</span>
-        </h2>
+        <span class="hero-kicker">Dual-Track Biomechanics + Classical ML</span>
+        <h2 class="hero-heading">ANALYZE YOUR <span>FORM.</span> GUARD YOUR <span>RECOVERY.</span></h2>
       </div>
-      <div class="flex items-center gap-5">
-        <div class="text-right border-r border-zinc-700 pr-5">
-          <span class="text-[10px] text-zinc-400 uppercase font-bold block">Real Kaggle Dataset</span>
-          <span id="hero-rows" class="font-gym text-2xl font-bold text-white">973 ATHLETES</span>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-label">Dataset</span>
+          <span id="hero-rows" class="hero-stat-val tabular-nums">-- Athletes</span>
         </div>
-        <div class="text-right border-r border-zinc-700 pr-5">
-          <span class="text-[10px] text-zinc-400 uppercase font-bold block">PCA Explained Variance</span>
-          <span id="hero-pca" class="font-gym text-2xl font-bold text-cyan-400">-- (3D)</span>
+        <div class="hero-stat">
+          <span class="hero-stat-label">PCA Variance</span>
+          <span id="hero-pca" class="hero-stat-val info tabular-nums">-- (3D)</span>
         </div>
-        <div class="text-right">
-          <span class="text-[10px] text-zinc-400 uppercase font-bold block">Isolation Forest</span>
-          <span id="hero-anom" class="font-gym text-2xl font-bold text-[#e31b23]">-- ANOMALIES</span>
+        <div class="hero-stat">
+          <span class="hero-stat-label">Anomalies</span>
+          <span id="hero-anom" class="hero-stat-val accent tabular-nums">--</span>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- MAIN WORKSPACE -->
-  <main class="max-w-7xl mx-auto px-6 mt-8 space-y-8">
+  <main class="container main-content">
+    <div id="api-error-banner" class="alert-box danger hidden" role="alert" aria-live="assertive"></div>
 
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-7">
-
-      <!-- LEFT 7 COLS: WORKOUT VIDEO & ALL-EXERCISE SELECTOR -->
-      <div class="lg:col-span-7 gym-card rounded-sm p-6 flex flex-col justify-between shadow-2xl">
-        <div>
-          <div class="flex flex-wrap justify-between items-center gap-3 mb-4 pb-3 border-b border-zinc-800">
-            <div>
-              <span class="text-[11px] font-bold uppercase tracking-widest text-[#e31b23]">Track 1: MediaPipe Pose Vision</span>
-              <h3 class="font-gym text-2xl font-bold text-white">WORKOUT VIDEO ANALYZER</h3>
-            </div>
-
-            <div class="flex flex-col">
-              <label class="text-[10px] uppercase font-bold text-zinc-400 mb-1">Select Exercise Movement:</label>
-              <select id="exercise-type" onchange="onExerciseChange()" class="bg-[#1b1b20] border-2 border-[#e31b23] text-xs font-bold uppercase tracking-wide px-3 py-2 text-white focus:outline-none cursor-pointer">
-                <option value="auto">🔥 Auto-Detect (Full Body Smart Mode)</option>
-                <option value="bicep_curl">💪 Bicep Curl / Hammer Curl (بايسبس)</option>
-                <option value="shoulder_press">🏋️‍♂️ Overhead Shoulder Press (بار/دامبل كتف)</option>
-                <option value="lateral_raise">🦅 Side Lateral Raise (رفرفة كتف جانبي)</option>
-                <option value="pushup_bench">🧱 Push-Up / Bench Press (ضغط / بنش صدر)</option>
-                <option value="lat_row">🛶 Lat Pulldown / Back Row (سحب عالي / ضهر)</option>
-                <option value="squat">🦵 Barbell / Bodyweight Squat (سكوات رجل)</option>
-                <option value="deadlift">🦿 Deadlift / Romanian Deadlift (ديدليفت)</option>
-                <option value="lunge">🏃‍♂️ Lunges / Split Squat (طعن رجل)</option>
-                <option value="plank">⚡ Plank / Core Stability (بلانك وثبات)</option>
-              </select>
-            </div>
+    <div class="workspace-grid">
+      <!-- TRACK 1: VIDEO & BIOMECHANICS -->
+      <section class="card" aria-labelledby="track1-title">
+        <div class="card-header">
+          <div>
+            <span class="section-tag">Track 1: MediaPipe Pose Vision</span>
+            <h3 id="track1-title" class="card-title">WORKOUT VIDEO ANALYZER</h3>
           </div>
-
-          <!-- Active Joint Indicator Banner -->
-          <div class="mb-3 px-3 py-2 bg-[#1a1a20] border-l-4 border-[#e31b23] flex justify-between items-center text-xs">
-            <span id="tracked-joints-label" class="font-semibold text-zinc-200">
-              🎯 Tracking: <b class="text-white">Full Body (Arms, Shoulders, Back & Knees Automatically)</b>
-            </span>
-            <span id="detected-move-badge" class="text-[11px] font-bold uppercase px-2 py-0.5 bg-zinc-800 text-[#e31b23]">Ready</span>
-          </div>
-
-          <!-- Video & Skeleton Display Box -->
-          <div class="relative bg-black border-2 border-zinc-800 aspect-video flex items-center justify-center overflow-hidden">
-            <video id="workout-video" class="hidden" playsinline muted loop></video>
-            <canvas id="pose-canvas" class="w-full h-full object-contain"></canvas>
-
-            <div id="video-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-b from-zinc-950/90 to-black/95">
-              <div class="w-16 h-16 bg-[#e31b23] flex items-center justify-center text-3xl mb-4 shadow-lg shadow-red-600/30" style="transform: skewX(-10deg);">
-                <span style="transform: skewX(10deg);">🏋️</span>
-              </div>
-              <h4 class="font-gym text-2xl font-bold text-white tracking-wide">UPLOAD YOUR WORKOUT CLIP</h4>
-              <p class="text-xs text-zinc-400 max-w-md mt-1">
-                Supports all gym exercises — Biceps, Chest, Shoulders, Back, Squats, Deadlifts & Posing.
-              </p>
-            </div>
-          </div>
-
-          <!-- Athletic Video Playback Controls -->
-          <div class="mt-4 bg-[#18181c] border border-zinc-800 p-3 flex flex-wrap items-center gap-3">
-            <button id="btn-play" onclick="togglePlayPause()" disabled class="btn-maruthi px-4 py-1.5 text-xs font-bold disabled:opacity-40">
-              <span>⏸ PAUSE</span>
-            </button>
-            <button id="btn-replay" onclick="replayVideo()" disabled class="btn-dark-skew px-4 py-1.5 text-xs font-bold disabled:opacity-40">
-              <span>⟲ REPLAY</span>
-            </button>
-            <button id="btn-loop" onclick="toggleLoop()" class="btn-dark-skew px-3.5 py-1.5 text-xs font-bold border-[#e31b23] text-white">
-              <span>🔁 AUTO-LOOP: ON</span>
-            </button>
-            <button onclick="resetTrackingStats()" class="btn-dark-skew px-3.5 py-1.5 text-xs font-bold">
-              <span>🧹 RESET REPS</span>
-            </button>
-            <div class="flex-1 flex items-center gap-2 min-w-[130px] pl-2">
-              <input id="video-seek" type="range" min="0" max="100" value="0" step="0.1" oninput="seekVideo()" disabled class="w-full cursor-pointer" />
-              <span id="video-time" class="text-[11px] font-mono text-zinc-400 w-20 text-right">0:00 / 0:00</span>
-            </div>
-          </div>
-
-          <!-- Maruthi Style Bold Scoreboard Bar -->
-          <div class="grid grid-cols-5 gap-2.5 mt-4">
-            <div class="bg-[#18181c] border-b-4 border-emerald-500 p-3 text-center">
-              <span class="text-[10px] font-bold text-zinc-400 block uppercase">Clean Reps</span>
-              <span id="live-good-reps" class="font-gym text-3xl font-bold text-emerald-400">0</span>
-            </div>
-            <div class="bg-[#18181c] border-b-4 border-[#e31b23] p-3 text-center">
-              <span class="text-[10px] font-bold text-zinc-400 block uppercase">Bad Form</span>
-              <span id="live-bad-reps" class="font-gym text-3xl font-bold text-[#e31b23]">0</span>
-            </div>
-            <div class="bg-[#18181c] border-b-4 border-zinc-600 p-3 text-center">
-              <span class="text-[10px] font-bold text-zinc-400 block uppercase">Joint Angle</span>
-              <span id="live-angle" class="font-gym text-3xl font-bold text-white">--°</span>
-            </div>
-            <div class="bg-[#18181c] border-b-4 border-amber-500 p-3 text-center">
-              <span class="text-[10px] font-bold text-zinc-400 block uppercase">Spine Tilt</span>
-              <span id="live-lean" class="font-gym text-3xl font-bold text-amber-400">--°</span>
-            </div>
-            <div class="bg-[#18181c] border-b-4 border-cyan-500 p-3 text-center">
-              <span class="text-[10px] font-bold text-zinc-400 block uppercase">Balance</span>
-              <span id="live-sym" class="font-gym text-3xl font-bold text-cyan-400">--%</span>
-            </div>
+          <div class="field-group" style="min-width: 240px; flex: 1 1 240px; max-width: 340px;">
+            <label for="exercise-type" class="field-label">Exercise Movement</label>
+            <select id="exercise-type" class="control">
+              <option value="auto">Auto-Detect (Full Body)</option>
+              <option value="bicep_curl">Bicep / Hammer Curl</option>
+              <option value="shoulder_press">Overhead Shoulder Press</option>
+              <option value="lateral_raise">Side Lateral Raise</option>
+              <option value="pushup_bench">Push-Up / Bench Press</option>
+              <option value="lat_row">Lat Pulldown / Back Row</option>
+              <option value="squat">Squat</option>
+              <option value="deadlift">Deadlift / RDL</option>
+              <option value="lunge">Lunges / Split Squat</option>
+              <option value="plank">Plank (Core Hold Timer)</option>
+            </select>
           </div>
         </div>
 
-        <!-- Bottom Upload Bar -->
-        <div class="mt-5 pt-4 border-t border-zinc-800 flex flex-wrap items-center justify-between gap-3">
-          <input type="file" id="video-upload" accept="video/*" class="text-xs text-zinc-300 file:mr-4 file:py-2 file:px-5 file:border-0 file:text-xs file:font-bold file:uppercase file:bg-[#e31b23] file:text-white hover:file:bg-red-600 cursor-pointer" />
-          <span id="sync-badge" class="text-xs font-bold uppercase tracking-wider text-zinc-400">⏳ STANDING BY...</span>
+        <div class="tracking-bar">
+          <span id="tracked-joints-label">Tracking: <strong>Full Body Smart Auto-Detection</strong></span>
+          <span id="detected-move-badge" class="badge">Ready</span>
         </div>
-      </div>
 
-      <!-- RIGHT 5 COLS: ATHLETIC BIOMETRICS + 4-STAGE REAL-DATA ML VERDICT -->
-      <div class="lg:col-span-5 gym-card rounded-sm p-6 flex flex-col justify-between space-y-4 shadow-2xl">
-        <div>
-          <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
-            <div>
-              <span class="text-[11px] font-bold uppercase tracking-widest text-[#e31b23]">Track 2: Real Kaggle Biometrics + Pose Fusion</span>
-              <h3 class="font-gym text-2xl font-bold text-white">ATHLETE INJURY & FORM REPORT</h3>
-            </div>
-            <span id="analysis-counter" class="text-xs px-3 py-1 bg-[#1c1c21] border border-zinc-700 text-zinc-300 font-mono">0 Frames</span>
-          </div>
+        <div class="video-stage">
+          <video id="workout-video" class="hidden" playsinline muted loop></video>
+          <canvas id="pose-canvas" aria-label="Workout pose skeleton overlay"></canvas>
 
-          <!-- Athlete Real Biometric Profile Inputs (Matches Kaggle Dataset Columns!) -->
-          <div class="mt-3 p-3 bg-[#18181c] border border-zinc-800">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-2">
-              ⌚ Athlete Smartwatch & Body Profile (Kaggle Features):
-            </span>
-            <div class="grid grid-cols-4 gap-2 text-xs">
-              <div>
-                <label class="text-[10px] text-zinc-400 block">Age</label>
-                <input id="inp-age" type="number" value="22" onchange="triggerManualEval()" class="w-full bg-zinc-900 border border-zinc-700 px-2 py-1 text-white font-bold" />
-              </div>
-              <div>
-                <label class="text-[10px] text-zinc-400 block">Weight (kg)</label>
-                <input id="inp-weight" type="number" value="78" onchange="triggerManualEval()" class="w-full bg-zinc-900 border border-zinc-700 px-2 py-1 text-white font-bold" />
-              </div>
-              <div>
-                <label class="text-[10px] text-zinc-400 block">Height (m)</label>
-                <input id="inp-height" type="number" step="0.01" value="1.85" onchange="triggerManualEval()" class="w-full bg-zinc-900 border border-zinc-700 px-2 py-1 text-white font-bold" />
-              </div>
-              <div>
-                <label class="text-[10px] text-zinc-400 block">Duration (m)</label>
-                <input id="inp-dur" type="number" value="55" onchange="triggerManualEval()" class="w-full bg-zinc-900 border border-zinc-700 px-2 py-1 text-white font-bold" />
-              </div>
+          <div id="video-placeholder" class="video-placeholder">
+            <div class="placeholder-icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+              </svg>
             </div>
-            <span class="text-[10px] text-zinc-500 block mt-2">Smartwatch data (optional):</span>
-            <div class="grid grid-cols-4 gap-2 text-xs mt-1">
-              <div><label class="text-[10px] text-zinc-400 block">Max BPM</label>
-                <input id="inp-maxbpm" type="number" placeholder="-" onchange="triggerManualEval()" class="w-full bg-zinc-900 border border-zinc-700 px-2 py-1 text-white font-bold" /></div>
-              <div><label class="text-[10px] text-zinc-400 block">Avg BPM</label>
-                <input id="inp-avgbpm" type="number" placeholder="-" onchange="triggerManualEval()" class="w-full bg-zinc-900 border border-zinc-700 px-2 py-1 text-white font-bold" /></div>
-              <div><label class="text-[10px] text-zinc-400 block">Resting BPM</label>
-                <input id="inp-restbpm" type="number" placeholder="-" onchange="triggerManualEval()" class="w-full bg-zinc-900 border border-zinc-700 px-2 py-1 text-white font-bold" /></div>
-              <div><label class="text-[10px] text-zinc-400 block">Water (L)</label>
-                <input id="inp-water" type="number" step="0.1" placeholder="-" onchange="triggerManualEval()" class="w-full bg-zinc-900 border border-zinc-700 px-2 py-1 text-white font-bold" /></div>
-            </div>
-          </div>
-
-          <!-- Dynamic Arabic/English Coach Verdict Banner -->
-          <div id="coach-verdict-box" class="mt-3 p-4 bg-[#19191f] border-l-4 border-zinc-500 transition-all">
-            <p id="coach-verdict-title" class="font-bold text-sm text-white">🏋️‍♂️ اختار التمرين وارفع الفيديو عشان الموديل يقيم أداءك</p>
-            <p id="coach-verdict-desc" class="text-xs text-zinc-300 mt-1 leading-relaxed">
-              الموديل متدرب على <b>973 متدرب حقيقي من Kaggle</b> وبيدمج بيانات جسمك فوق مع زوايا المفاصل والـ Bad Reps من الفيديو لايف!
+            <h4 class="font-display" style="margin: 0; font-size: 1.125rem;">UPLOAD WORKOUT CLIP</h4>
+            <p style="margin: 6px 0 0; font-size: 0.8125rem; color: #cbd5e1; max-width: 360px;">
+              Processes video locally in your browser via MediaPipe Pose across reps, spine alignment, symmetry, and plank holds.
             </p>
           </div>
         </div>
 
-        <!-- 4-Stage Results Styled as Gym Performance Meters -->
-        <div class="space-y-3">
+        <div class="playback-bar">
+          <button id="btn-play" type="button" disabled class="btn btn-primary">Pause</button>
+          <button id="btn-replay" type="button" disabled class="btn">Replay</button>
+          <button id="btn-loop" type="button" class="btn btn-active" aria-pressed="true">Auto-Loop: On</button>
+          <button id="btn-reset" type="button" class="btn">Reset</button>
+          <div class="seek-wrap">
+            <label for="video-seek" class="sr-only">Seek video timeline</label>
+            <input id="video-seek" type="range" min="0" max="100" value="0" step="0.1" disabled class="seek-range" />
+            <span id="video-time" class="time-readout tabular-nums">0:00 / 0:00</span>
+          </div>
+        </div>
 
-          <!-- 1. Injury Risk Meter -->
-          <div class="p-3.5 bg-[#18181c] border border-zinc-800">
-            <div class="flex justify-between items-end">
+        <div class="scoreboard">
+          <div class="metric-tile safe">
+            <span id="lbl-primary-metric" class="metric-tile-label">Clean Reps</span>
+            <span id="live-good-reps" class="metric-tile-val tabular-nums">0</span>
+          </div>
+          <div class="metric-tile danger">
+            <span id="lbl-secondary-metric" class="metric-tile-label">Bad Form</span>
+            <span id="live-bad-reps" class="metric-tile-val tabular-nums">0</span>
+          </div>
+          <div class="metric-tile">
+            <span class="metric-tile-label">Joint Angle</span>
+            <span id="live-angle" class="metric-tile-val tabular-nums">--</span>
+          </div>
+          <div class="metric-tile warn">
+            <span id="lbl-lean-metric" class="metric-tile-label">Spine Lean</span>
+            <span id="live-lean" class="metric-tile-val tabular-nums">--</span>
+          </div>
+          <div class="metric-tile info">
+            <span class="metric-tile-label">Symmetry</span>
+            <span id="live-sym" class="metric-tile-val tabular-nums">--</span>
+          </div>
+        </div>
+
+        <div class="upload-row">
+          <div>
+            <label for="video-upload" class="file-label">Choose Workout Video</label>
+            <input id="video-upload" type="file" accept="video/*" class="sr-only" />
+            <span id="file-name-label" style="margin-inline-start: 8px; font-size: 0.75rem; color: var(--text-muted);">No file selected</span>
+          </div>
+          <span id="sync-badge" class="badge">Standing By</span>
+        </div>
+      </section>
+
+      <!-- TRACK 2: BIOMETRIC & RISK REPORT -->
+      <section class="card" aria-labelledby="track2-title">
+        <div class="card-header">
+          <div>
+            <span class="section-tag">Track 2: Biometric + Pose Fusion</span>
+            <h3 id="track2-title" class="card-title">INJURY &amp; FORM REPORT</h3>
+          </div>
+          <span id="analysis-counter" class="badge tabular-nums">0 Frames</span>
+        </div>
+
+        <div class="bio-panel">
+          <div class="smartwatch-header">
+            <span>Body &amp; Session Profile (Required)</span>
+          </div>
+          <div class="bio-grid">
+            <div class="field-group">
+              <label for="inp-age" class="field-label">Age (10–100)</label>
+              <input id="inp-age" type="number" min="10" max="100" step="1" value="22" class="control tabular-nums" />
+            </div>
+            <div class="field-group">
+              <label for="inp-weight" class="field-label">Weight (kg)</label>
+              <input id="inp-weight" type="number" min="30" max="250" step="0.1" value="78" class="control tabular-nums" />
+            </div>
+            <div class="field-group">
+              <label for="inp-height" class="field-label">Height (m)</label>
+              <input id="inp-height" type="number" min="1.2" max="2.3" step="0.01" value="1.85" class="control tabular-nums" />
+            </div>
+            <div class="field-group">
+              <label for="inp-dur" class="field-label">Duration (min)</label>
+              <input id="inp-dur" type="number" min="1" max="300" step="1" value="55" class="control tabular-nums" />
+            </div>
+          </div>
+
+          <div class="smartwatch-header">
+            <span>Smartwatch &amp; Body Comp (Optional)</span>
+            <span id="smartwatch-status" class="badge">0/4 HR+Water</span>
+          </div>
+          <div class="bio-grid">
+            <div class="field-group">
+              <label for="inp-maxbpm" class="field-label">Max BPM</label>
+              <input id="inp-maxbpm" type="number" min="80" max="230" step="1" placeholder="-" class="control tabular-nums" />
+            </div>
+            <div class="field-group">
+              <label for="inp-avgbpm" class="field-label">Avg BPM</label>
+              <input id="inp-avgbpm" type="number" min="50" max="220" step="1" placeholder="-" class="control tabular-nums" />
+            </div>
+            <div class="field-group">
+              <label for="inp-restbpm" class="field-label">Resting BPM</label>
+              <input id="inp-restbpm" type="number" min="30" max="120" step="1" placeholder="-" class="control tabular-nums" />
+            </div>
+            <div class="field-group">
+              <label for="inp-water" class="field-label">Water (L)</label>
+              <input id="inp-water" type="number" min="0" max="10" step="0.1" placeholder="-" class="control tabular-nums" />
+            </div>
+            <div class="field-group">
+              <label for="inp-fat" class="field-label">Body Fat (%)</label>
+              <input id="inp-fat" type="number" min="2" max="60" step="0.1" placeholder="-" class="control tabular-nums" />
+            </div>
+          </div>
+          <p id="imputed-note" style="margin: 0; font-size: 0.75rem; color: var(--text-muted);"></p>
+        </div>
+
+        <div id="coach-verdict-box" class="alert-box rtl-block" style="margin-top: 12px;" aria-live="polite">
+          <div id="coach-verdict-title" style="font-weight: 700; font-size: 0.9375rem;">
+            اختر التمرين وارفع الفيديو لتقييم الأداء الحركي والحيوي
+          </div>
+          <p id="coach-verdict-desc" style="margin: 4px 0 0; color: var(--text-secondary);">
+            يتم دمج قياسات جسمك والساعة الذكية مع زوايا المفاصل والـ Bad Reps من الفيديو فور بدء التشغيل.
+          </p>
+        </div>
+
+        <div class="result-stack">
+          <div class="result-card">
+            <div class="result-row">
               <div>
-                <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Stage 4A: Random Forest Classifier <span id="lbl-f1"></span></span>
-                <span class="font-gym text-lg font-bold text-white">INJURY & STRAIN RISK</span>
+                <span class="section-tag">Stage 4A: Overtraining &amp; Injury Risk</span>
+                <strong style="font-size: 1rem;">INJURY &amp; STRAIN PROBABILITY</strong>
               </div>
-              <span id="out-risk-pct" class="font-gym text-3xl font-bold text-zinc-400">--%</span>
+              <span id="out-risk-pct" class="font-display tabular-nums" style="font-size: 1.65rem; font-weight: 700;">--%</span>
             </div>
-            <div class="w-full bg-zinc-900 h-3 mt-1.5 overflow-hidden p-0.5 border border-zinc-800">
-              <div id="risk-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
+            <div class="progress-track">
+              <div id="risk-bar" class="progress-fill"></div>
             </div>
-            <p id="out-risk-label" class="text-[11px] text-zinc-400 mt-1 font-semibold uppercase">Awaiting Video Stream...</p>
+            <p id="out-risk-label" style="margin: 6px 0 0; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">
+              Awaiting evaluation...
+            </p>
           </div>
 
-          <!-- 2. Biomechanical Anomaly Detector -->
-          <div id="anomaly-card" class="p-3.5 bg-[#18181c] border border-zinc-800 transition">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Stage 3: Isolation Forest Anomaly Guard</span>
-            <p id="out-anomaly" class="font-gym text-base font-bold text-zinc-200 mt-0.5">WAITING FOR MOVEMENT DATA</p>
+          <div id="anomaly-card" class="result-card">
+            <span class="section-tag">Stage 3: Isolation Forest + Clinical Guard</span>
+            <div id="out-anomaly" style="margin-top: 4px; font-weight: 700;">WAITING FOR EVALUATION</div>
           </div>
 
-          <!-- 3. Athlete Cluster Classification -->
-          <div class="p-3.5 bg-[#18181c] border border-zinc-800">
-            <div class="flex justify-between text-[10px] font-bold text-zinc-400 uppercase">
-              <span>Stage 2: K-Means Athlete Cluster</span>
-              <span id="out-pca" class="text-[#e31b23] font-mono">PCA: [--, --, --]</span>
+          <div class="result-card">
+            <div class="result-row">
+              <span class="section-tag">Stage 2: K-Means Profile</span>
+              <span id="out-pca" class="tabular-nums" style="font-size: 0.75rem; font-family: ui-monospace, monospace; color: var(--text-muted);">PCA: [--, --, --]</span>
             </div>
-            <p id="out-cluster" class="font-gym text-base font-bold text-white mt-0.5">UNCLASSIFIED ATHLETE</p>
+            <div id="out-cluster" class="rtl-block" style="margin-top: 4px; font-weight: 700; direction: ltr; text-align: start;">--</div>
           </div>
 
-          <!-- 4. Calories Burn Rate -->
-          <div class="p-3.5 bg-[#18181c] border border-zinc-800 flex justify-between items-center">
+          <div class="result-card result-row">
             <div>
-              <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">Stage 4B: Real Kaggle Calories Regressor</span>
-              <span class="font-gym text-base font-bold text-white">PREDICTED SESSION BURN</span>
+              <span class="section-tag">Stage 4B: Calories Regressor</span>
+              <strong style="font-size: 1rem;">PREDICTED SESSION BURN</strong>
             </div>
-            <div class="text-right">
-              <span id="out-calories" class="font-gym text-3xl font-bold text-[#e31b23]">--</span>
-              <span class="text-[10px] font-bold uppercase text-zinc-400 block">KCAL</span>
+            <div style="text-align: end;">
+              <span id="out-calories" class="font-display tabular-nums" style="font-size: 1.75rem; font-weight: 700; color: var(--accent-text);">--</span>
+              <span style="display: block; font-size: 0.6875rem; font-weight: 700; color: var(--text-muted);">KCAL</span>
             </div>
           </div>
-
         </div>
-      </div>
+      </section>
+    </div>
 
-    </section>
-
-    <!-- BOTTOM SECTION: ATHLETIC PCA & CLUSTERING MAP + ACADEMIC EXPLANATION -->
-    <section class="gym-card rounded-sm p-6 shadow-2xl">
-      <div class="flex flex-wrap justify-between items-center gap-4 mb-4 pb-3 border-b border-zinc-800">
+    <!-- BOTTOM SECTION: PCA & CLUSTERING CHART -->
+    <section class="card" aria-labelledby="pca-title">
+      <div class="card-header">
         <div>
-          <span class="text-[11px] font-bold uppercase tracking-widest text-[#e31b23]">Unsupervised ML Analytics (973 Real Kaggle Gym Athletes)</span>
-          <h3 class="font-gym text-2xl font-bold text-white">ATHLETE PERFORMANCE CLUSTERS & PCA PROJECTION</h3>
+          <span class="section-tag">Unsupervised ML Analytics</span>
+          <h3 id="pca-title" class="card-title">ATHLETE CLUSTERS &amp; PCA PROJECTION</h3>
         </div>
-        <span class="text-xs text-zinc-300 font-semibold">
-          النجمة الذهبية ⭐ بتمثل <b>مكان البروفايل اللي دخلته</b> (السن والوزن والطول والنبض...) وسط الـ 973 متدرب في داتا Kaggle
+        <span class="rtl-block" style="font-size: 0.8125rem; color: var(--text-secondary);">
+          النقطة الذهبية تمثل موقع بروفايلك الحالي وسط <span id="legend-total-count" class="tabular-nums">--</span> متدرب
         </span>
       </div>
 
-      <div class="h-72">
-        <canvas id="pcaChart"></canvas>
+      <div class="chart-wrap">
+        <canvas id="pcaChart" aria-label="PCA scatter plot of gym athlete clusters"></canvas>
       </div>
 
-      <!-- Academic Explanation Box for Instructor Discussion -->
-      <div class="mt-5 p-4 bg-[#18181c] border-l-4 border-[#e31b23] text-xs leading-relaxed text-zinc-300 space-y-2">
-        <div class="font-bold text-white text-sm">
-          💡 كيف تقرأ هذه الخريطة؟ (شرح الـ PCA & Unsupervised Clustering للمناقشة الأكاديمية):
-        </div>
-        <p>
-          1. <b>اختزال الأبعاد (Stage 1 - PCA):</b> الداتا الحقيقية من Kaggle بتقيس <b>10 خصائص فسيولوجية (10D)</b> لكل متدرب (العمر، الوزن، الطول، أقصى ومتوسط نبض القلب، نبض الراحة، مدة التمرين، نسبة الدهون، شرب المياه، والـ BMI). استخدمنا خوارزمية <b>PCA</b> لضغط الـ 10 أبعاد في 3 مكونات بتحتفظ بـ <b><span id="pca-var3">--</span>%</b> من التباين، والرسم تحت بأول مكونين (<b>PC1 & PC2</b>) فقط وهم بيمثلوا <b><span id="pca-var2">--</span>%</b> (يعني جزء كبير من المعلومات مش ظاهر في الرسمة).
+      <div class="academic-box rtl-block" lang="ar" dir="rtl">
+        <strong style="color: var(--text-primary);">كيف تقرأ هذه الخريطة؟ (ملخص الـ PCA والـ Clustering)</strong>
+        <p style="margin: 0;">
+          1. <strong>اختزال الأبعاد (PCA):</strong> يتم ضغط 10 خصائص فسيولوجية إلى 3 مكونات تحتفظ بـ <strong id="pca-var3" class="tabular-nums">--</strong>% من التباين، ويعرض الرسم أول مكونين (PC1 وPC2) بنسبة <strong id="pca-var2" class="tabular-nums">--</strong>% من التباين الكلي.
         </p>
-        <p>
-          2. <b>التجميع وكشف الشذوذ (Stage 2 & 3 - K-Means + Isolation Forest):</b> النقط الملونة بتمثل تقسيم الـ <b>973 متدرب الحقيقيين</b> بدون Labels: 
-          <span id="cluster-legend"></span>
-          بينما <span class="text-[#e31b23] font-bold">المثلثات الحمراء 🔺 (<span id="legend-anom">--</span> حالة)</span> هي الحالات غير المعتادة إحصائيًا التي اكتشفها موديل <b>Isolation Forest</b>. 
-          أما <b>النجمة الذهبية ⭐ (YOU)</b> فبتتحرك لما تغيّر بيانات الجسم والنبض اللي بتدخلها (مش من الفيديو نفسه). أسماء المجموعات مستخرجة تلقائيًا من الأرقام الفعلية.
+        <p style="margin: 0;">
+          2. <strong>التجميع وكشف الشذوذ <span dir="ltr">(K-Means + Isolation Forest)</span>:</strong> المجموعات الملونة تمثل تقسيم المتدربين: <span id="cluster-legend"></span>، والمثلثات الحمراء (<strong id="legend-anom" class="tabular-nums">--</strong> حالة) تمثل القيم غير المعتادة إحصائيًا. العلامة الذهبية (<span dir="ltr">YOU</span>) تتحرك بناءً على بيانات الجسم والنبض المدخلة.
         </p>
       </div>
     </section>
-
   </main>
 
   <script>
+    const THEME_KEY = 'workout_coach_theme';
     let pcaChartInstance = null;
+    let currentBlobUrl = null;
+    let poseEngine = null;
+    let poseInitPromise = null;
+    let lastPoseTimestampMs = 0;
+    let rafId = null;
+    let isProcessingFrame = false;
+    let activeFetchController = null;
+    let latestRequestId = 0;
+
     const videoEl = document.getElementById('workout-video');
     const canvasEl = document.getElementById('pose-canvas');
     const canvasCtx = canvasEl.getContext('2d');
 
-    let poseEngine = null;
-    let goodReps = 0, badReps = 0, repStage = 'down';
-    let maxLeanInRep = 0, minSymInRep = 100, minAngleInRep = 180, maxAngleInRep = 0;
-    let frameCount = 0;
-    let recentLeans = [], recentSyms = [], recentROMs = [];
-    let angleHistoryArms = [], angleHistoryLegs = [], angleHistoryShoulders = [];
-    let lastApiCallTime = 0;
-    let lastTrackedLean = 8.0, lastTrackedSym = 94.0;
-
+    // Default biomechanics profiles synced with backend/pose_math.py (updated live from /api/dataset-overview)
     const EXERCISE_CONFIG = {
-      auto: {
-        title: "Full Body Smart Auto-Detection (Arms, Shoulders, Back & Legs)",
-        downThreshold: 132, upThreshold: 82, maxAllowedLean: 19
-      },
-      bicep_curl: {
-        title: "Bicep / Hammer Curl — Tracking Shoulder → Elbow → Wrist",
-        jointsL: [11, 13, 15], jointsR: [12, 14, 16],
-        downThreshold: 138, upThreshold: 72, maxAllowedLean: 16
-      },
-      shoulder_press: {
-        title: "Overhead Shoulder Press — Tracking Hip → Shoulder → Wrist/Elbow",
-        jointsL: [13, 11, 23], jointsR: [14, 12, 24],
-        downThreshold: 140, upThreshold: 75, maxAllowedLean: 18
-      },
-      lateral_raise: {
-        title: "Side Lateral Raise — Tracking Hip → Shoulder → Elbow Abduction",
-        jointsL: [23, 11, 13], jointsR: [24, 12, 14],
-        downThreshold: 80, upThreshold: 32, maxAllowedLean: 16
-      },
-      pushup_bench: {
-        title: "Push-Up / Bench Press — Tracking Shoulder → Elbow → Wrist Extension",
-        jointsL: [11, 13, 15], jointsR: [12, 14, 16],
-        downThreshold: 140, upThreshold: 80, maxAllowedLean: 22
-      },
-      lat_row: {
-        title: "Lat Pulldown / Back Row — Tracking Shoulder → Elbow → Wrist Pull",
-        jointsL: [11, 13, 15], jointsR: [12, 14, 16],
-        downThreshold: 140, upThreshold: 75, maxAllowedLean: 20
-      },
-      squat: {
-        title: "Squat — Tracking Hip → Knee → Ankle Depth & Spine Alignment",
-        jointsL: [23, 25, 27], jointsR: [24, 26, 28],
-        downThreshold: 145, upThreshold: 95, maxAllowedLean: 24
-      },
-      deadlift: {
-        title: "Deadlift — Tracking Shoulder → Hip → Knee Hinge & Lower Back Safety",
-        jointsL: [11, 23, 25], jointsR: [12, 24, 26],
-        downThreshold: 150, upThreshold: 100, maxAllowedLean: 28
-      },
-      lunge: {
-        title: "Lunges / Split Squat — Tracking Knee Flexion & Pelvic Balance",
-        jointsL: [23, 25, 27], jointsR: [24, 26, 28],
-        downThreshold: 145, upThreshold: 92, maxAllowedLean: 20
-      },
-      plank: {
-        title: "Plank / Core Stability — Tracking Full Body Line (Shoulder → Hip → Ankle)",
-        jointsL: [11, 23, 27], jointsR: [12, 24, 28],
-        downThreshold: 165, upThreshold: 145, maxAllowedLean: 15
-      }
+      auto: { title: 'Full Body Smart Auto-Detection', mode: 'reps', direction: 'flex', jointsL: [11, 13, 15], jointsR: [12, 14, 16], startThreshold: 138, peakThreshold: 72, minRom: 35, maxAllowedLean: 17.5, symmetryFloor: 82 },
+      bicep_curl: { title: 'Bicep / Hammer Curl — Shoulder -> Elbow -> Wrist', mode: 'reps', direction: 'flex', jointsL: [11, 13, 15], jointsR: [12, 14, 16], startThreshold: 138, peakThreshold: 72, minRom: 35, maxAllowedLean: 17.5, symmetryFloor: 82 },
+      shoulder_press: { title: 'Overhead Shoulder Press — Hip -> Shoulder -> Elbow', mode: 'reps', direction: 'extend', jointsL: [13, 11, 23], jointsR: [14, 12, 24], startThreshold: 85, peakThreshold: 145, minRom: 35, maxAllowedLean: 18, symmetryFloor: 82 },
+      lateral_raise: { title: 'Side Lateral Raise — Hip -> Shoulder -> Elbow Abduction', mode: 'reps', direction: 'extend', jointsL: [23, 11, 13], jointsR: [24, 12, 14], startThreshold: 30, peakThreshold: 75, minRom: 30, maxAllowedLean: 16, symmetryFloor: 82 },
+      pushup_bench: { title: 'Push-Up / Bench Press — Shoulder -> Elbow -> Wrist', mode: 'reps', direction: 'flex', jointsL: [11, 13, 15], jointsR: [12, 14, 16], startThreshold: 140, peakThreshold: 85, minRom: 35, leanMetric: 'body_line', maxAllowedLean: 20, symmetryFloor: 82 },
+      lat_row: { title: 'Lat Pulldown / Back Row — Shoulder -> Elbow -> Wrist', mode: 'reps', direction: 'flex', jointsL: [11, 13, 15], jointsR: [12, 14, 16], startThreshold: 140, peakThreshold: 75, minRom: 35, maxAllowedLean: 20, symmetryFloor: 82 },
+      squat: { title: 'Squat — Hip -> Knee -> Ankle Depth & Alignment', mode: 'reps', direction: 'flex', jointsL: [23, 25, 27], jointsR: [24, 26, 28], startThreshold: 145, peakThreshold: 95, minRom: 35, maxAllowedLean: 25, symmetryFloor: 82 },
+      deadlift: { title: 'Deadlift — Shoulder -> Hip -> Knee Hinge', mode: 'reps', direction: 'flex', jointsL: [11, 23, 25], jointsR: [12, 24, 26], startThreshold: 150, peakThreshold: 100, minRom: 35, maxAllowedLean: 45, symmetryFloor: 82 },
+      lunge: { title: 'Lunges / Split Squat — Knee Flexion & Pelvic Balance', mode: 'reps', direction: 'flex', jointsL: [23, 25, 27], jointsR: [24, 26, 28], startThreshold: 145, peakThreshold: 92, minRom: 35, maxAllowedLean: 20, symmetryFloor: 78 },
+      plank: { title: 'Plank / Core Stability — Shoulder -> Hip -> Ankle Hold Timer', mode: 'hold', direction: 'hold', jointsL: [11, 23, 27], jointsR: [12, 24, 28], minHoldAngle: 155, leanMetric: 'body_line', maxAllowedLean: 22, symmetryFloor: 82 },
     };
+
+    let goodReps = 0;
+    let badReps = 0;
+    let repStage = 'start';
+    let lastAutoEx = null;
+    let maxLeanInRep = 0;
+    let minSymInRep = 100;
+    let minAngleInRep = 180;
+    let maxAngleInRep = 0;
+    let plankHoldSec = 0;
+    let plankBadSec = 0;
+    let lastFrameTs = null;
+    let frameCount = 0;
+    let recentLeans = [];
+    let recentSyms = [];
+    let angleHistoryArms = [];
+    let angleHistoryLegs = [];
+    let angleHistoryShoulders = [];
+    let lastApiCallTime = 0;
+    let hasVideoTelemetry = false;
+    let lastTrackedLean = null;
+    let lastTrackedSym = null;
+
+    function getCssVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem(THEME_KEY, theme);
+      const btn = document.getElementById('btn-theme');
+      const lbl = document.getElementById('theme-label');
+      const isLight = theme === 'light';
+      btn.setAttribute('aria-pressed', String(isLight));
+      lbl.textContent = isLight ? 'Dark Mode' : 'Light Mode';
+      if (pcaChartInstance) {
+        pcaChartInstance.options.plugins.legend.labels.color = getCssVar('--text-secondary');
+        pcaChartInstance.options.scales.x.title.color = getCssVar('--chart-tick');
+        pcaChartInstance.options.scales.x.ticks.color = getCssVar('--chart-tick');
+        pcaChartInstance.options.scales.x.grid.color = getCssVar('--chart-grid');
+        pcaChartInstance.options.scales.y.title.color = getCssVar('--chart-tick');
+        pcaChartInstance.options.scales.y.ticks.color = getCssVar('--chart-tick');
+        pcaChartInstance.options.scales.y.grid.color = getCssVar('--chart-grid');
+        pcaChartInstance.update('none');
+      }
+    }
+
+    document.getElementById('btn-theme').addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    function showErrorBanner(message) {
+      const el = document.getElementById('api-error-banner');
+      if (!message) {
+        el.textContent = '';
+        el.classList.add('hidden');
+        return;
+      }
+      el.textContent = message;
+      el.classList.remove('hidden');
+    }
+
+    function updateScoreboardHeaders(exKey) {
+      const cfg = EXERCISE_CONFIG[exKey] || EXERCISE_CONFIG.auto;
+      const isHold = cfg.mode === 'hold';
+      document.getElementById('lbl-primary-metric').textContent = isHold ? 'Clean Hold (s)' : 'Clean Reps';
+      document.getElementById('lbl-secondary-metric').textContent = isHold ? 'Sag Time (s)' : 'Bad Form';
+      document.getElementById('lbl-lean-metric').textContent = cfg.leanMetric === 'body_line' ? 'Body-Line Dev' : 'Spine Lean';
+    }
+
+    function resetRepCycleState() {
+      repStage = 'start';
+      maxLeanInRep = 0;
+      minSymInRep = 100;
+      minAngleInRep = 180;
+      maxAngleInRep = 0;
+    }
+
+    function resetTrackingStats() {
+      goodReps = 0;
+      badReps = 0;
+      plankHoldSec = 0;
+      plankBadSec = 0;
+      lastFrameTs = null;
+      lastAutoEx = null;
+      frameCount = 0;
+      hasVideoTelemetry = false;
+      lastTrackedLean = null;
+      lastTrackedSym = null;
+      recentLeans = [];
+      recentSyms = [];
+      angleHistoryArms = [];
+      angleHistoryLegs = [];
+      angleHistoryShoulders = [];
+      resetRepCycleState();
+
+      document.getElementById('live-good-reps').textContent = '0';
+      document.getElementById('live-bad-reps').textContent = '0';
+      document.getElementById('live-angle').textContent = '--';
+      document.getElementById('live-lean').textContent = '--';
+      document.getElementById('live-sym').textContent = '--';
+      document.getElementById('analysis-counter').textContent = '0 Frames';
+      document.getElementById('detected-move-badge').textContent = 'Ready';
+      document.getElementById('sync-badge').textContent = videoEl.src ? 'Paused' : 'Standing By';
+      triggerManualEval();
+    }
 
     function onExerciseChange() {
       const ex = document.getElementById('exercise-type').value;
-      const cfg = EXERCISE_CONFIG[ex];
-      document.getElementById('tracked-joints-label').innerHTML = `🎯 Tracking: <b class="text-white">${cfg.title}</b>`;
+      const cfg = EXERCISE_CONFIG[ex] || EXERCISE_CONFIG.auto;
+      const labelEl = document.getElementById('tracked-joints-label');
+      labelEl.textContent = 'Tracking: ';
+      const strong = document.createElement('strong');
+      strong.textContent = cfg.title;
+      labelEl.appendChild(strong);
+      updateScoreboardHeaders(ex);
       resetTrackingStats();
     }
 
-    // 1. Load Real Kaggle Dataset PCA Chart
+    document.getElementById('exercise-type').addEventListener('change', onExerciseChange);
+    document.getElementById('btn-reset').addEventListener('click', resetTrackingStats);
+
     async function loadOverview() {
       let data;
       try {
         const res = await fetch('/api/dataset-overview');
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        if (!res.ok) {
+          const errPayload = await res.json().catch(() => ({}));
+          throw new Error(errPayload.detail || `Server error (${res.status})`);
+        }
         data = await res.json();
       } catch (err) {
-        console.error(err);
-        document.getElementById('hero-f1').innerText = 'Server error: run python -m backend.ml_pipeline once, then reload';
+        document.getElementById('hero-f1').textContent = 'Model Unavailable';
+        showErrorBanner(`Failed to load dataset overview: ${err.message}`);
         return;
       }
 
-      document.getElementById('hero-rows').innerText = `${data.total_records} ATHLETES`;
-      document.getElementById('hero-pca').innerText = `${data.pca_explained_variance}% (3D)`;
-      document.getElementById('hero-anom').innerText = `${data.total_anomalies} ANOMALIES`;
-      document.getElementById('legend-anom').innerText = data.total_anomalies;
-      document.getElementById('pca-var3').innerText = data.pca_explained_variance;
-      document.getElementById('pca-var2').innerText = data.pca_explained_variance_2d;
-      const m = data.metrics || {}, cl = (m.classifier || {}), f1 = cl.rf_13_features, dt = cl.decision_tree_depth3;
-      if (f1 && dt) {
-        document.getElementById('hero-f1').innerText = `RF F1 ${f1.f1} • tree-3 baseline ${dt.f1}`;
-        document.getElementById('lbl-f1').innerText = `(F1 ${f1.f1} — label is rule-derived; depth-3 tree gets ${dt.f1})`;
+      if (data.exercise_profiles) {
+        Object.entries(data.exercise_profiles).forEach(([k, prof]) => {
+          if (EXERCISE_CONFIG[k]) {
+            EXERCISE_CONFIG[k] = { ...EXERCISE_CONFIG[k], ...prof };
+          }
+        });
       }
+
+      document.getElementById('hero-rows').textContent = `${data.total_records} Athletes`;
+      document.getElementById('legend-total-count').textContent = String(data.total_records);
+      document.getElementById('hero-pca').textContent = `${data.pca_explained_variance}% (3D)`;
+      document.getElementById('hero-anom').textContent = `${data.total_anomalies} Flagged`;
+      document.getElementById('legend-anom').textContent = String(data.total_anomalies);
+      document.getElementById('pca-var3').textContent = String(data.pca_explained_variance);
+      document.getElementById('pca-var2').textContent = String(data.pca_explained_variance_2d);
+
+      const cl = (data.metrics || {}).classifier || {};
+      if (cl.rf_13_features && cl.decision_tree_depth3) {
+        document.getElementById('hero-f1').textContent =
+          `RF F1 ${cl.rf_13_features.f1} | Tree-3 ${cl.decision_tree_depth3.f1}`;
+      }
+
       const cn = data.cluster_names || {};
-      const cname = (k) => cn[k] ? cn[k].en : `cluster ${k}`;
-      const colors = ['text-emerald-400', 'text-sky-400', 'text-purple-400'], colorNames = ['الأخضر', 'الأزرق', 'البنفسجي'];
-      document.getElementById('cluster-legend').innerHTML = [0, 1, 2].map(k =>
-        `<span class="${colors[k]} font-bold">${colorNames[k]} (Cluster ${k}${cn[k] ? ': ' + cn[k].ar : ''})</span>`).join('، ') + '،';
+      const cname = (k) => (cn[k] ? cn[k].en : `Cluster ${k}`);
+      const legendEl = document.getElementById('cluster-legend');
+      legendEl.textContent = '';
+      const colorLabels = ['الأخضر', 'الأزرق', 'البرتقالي'];
+      const colorCss = ['var(--safe-text)', 'var(--info)', 'var(--warn-text)'];
+      [0, 1, 2].forEach((k, idx) => {
+        const span = document.createElement('span');
+        span.style.fontWeight = '700';
+        span.style.color = colorCss[idx];
+        const desc = cn[k] ? `: ${cn[k].ar}` : '';
+        span.textContent = `${colorLabels[k]} (Cluster ${k}${desc})`;
+        legendEl.appendChild(span);
+        if (idx < 2) legendEl.appendChild(document.createTextNode('، '));
+      });
 
-      const c0 = data.scatter_data.filter(d => d.cluster === 0 && !d.is_anomaly).map(d => ({x: d.pca1, y: d.pca2}));
-      const c1 = data.scatter_data.filter(d => d.cluster === 1 && !d.is_anomaly).map(d => ({x: d.pca1, y: d.pca2}));
-      const c2 = data.scatter_data.filter(d => d.cluster === 2 && !d.is_anomaly).map(d => ({x: d.pca1, y: d.pca2}));
-      const anom = data.scatter_data.filter(d => d.is_anomaly).map(d => ({x: d.pca1, y: d.pca2}));
+      const c0 = data.scatter_data.filter((d) => d.cluster === 0 && !d.is_anomaly).map((d) => ({ x: d.pca1, y: d.pca2 }));
+      const c1 = data.scatter_data.filter((d) => d.cluster === 1 && !d.is_anomaly).map((d) => ({ x: d.pca1, y: d.pca2 }));
+      const c2 = data.scatter_data.filter((d) => d.cluster === 2 && !d.is_anomaly).map((d) => ({ x: d.pca1, y: d.pca2 }));
+      const anom = data.scatter_data.filter((d) => d.is_anomaly).map((d) => ({ x: d.pca1, y: d.pca2 }));
 
+      if (!window.Chart) {
+        showErrorBanner('Chart.js library failed to load; PCA scatter plot disabled.');
+        triggerManualEval();
+        return;
+      }
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const ctx = document.getElementById('pcaChart').getContext('2d');
       if (pcaChartInstance) pcaChartInstance.destroy();
       pcaChartInstance = new Chart(ctx, {
         type: 'scatter',
         data: {
           datasets: [
-            { label: '⭐ YOU (Live Video Athlete)', data: [], backgroundColor: '#facc15', borderColor: '#ffffff', borderWidth: 2, pointRadius: 12, pointStyle: 'star' },
-            { label: `Cluster 0: ${cname(0)}`, data: c0, backgroundColor: 'rgba(16, 185, 129, 0.55)', pointRadius: 3.5 },
-            { label: `Cluster 1: ${cname(1)}`, data: c1, backgroundColor: 'rgba(56, 189, 248, 0.55)', pointRadius: 3.5 },
-            { label: `Cluster 2: ${cname(2)}`, data: c2, backgroundColor: 'rgba(168, 85, 247, 0.55)', pointRadius: 3.5 },
-            { label: 'Isolation Forest Anomaly ⚠️', data: anom, backgroundColor: 'rgba(227, 27, 35, 0.9)', pointRadius: 5.5, pointStyle: 'triangle' }
-          ]
+            { label: 'YOU (Current Profile)', data: [], backgroundColor: '#eab308', borderColor: '#ffffff', borderWidth: 2, pointRadius: 9, pointStyle: 'rectRot' },
+            { label: `Cluster 0: ${cname(0)}`, data: c0, backgroundColor: 'rgba(16, 185, 129, 0.58)', pointRadius: 3.5 },
+            { label: `Cluster 1: ${cname(1)}`, data: c1, backgroundColor: 'rgba(56, 189, 248, 0.58)', pointRadius: 3.5 },
+            { label: `Cluster 2: ${cname(2)}`, data: c2, backgroundColor: 'rgba(245, 158, 11, 0.58)', pointRadius: 3.5 },
+            { label: 'Isolation Forest Anomaly', data: anom, backgroundColor: 'rgba(239, 68, 68, 0.9)', pointRadius: 5.5, pointStyle: 'triangle' },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#e4e4e7', font: { family: 'Montserrat', size: 11, weight: 'bold' } } } },
+          animation: reducedMotion ? false : undefined,
+          plugins: {
+            legend: {
+              labels: { color: getCssVar('--text-secondary'), font: { family: 'Inter, sans-serif', size: 11, weight: '600' }, boxWidth: 12 },
+            },
+          },
           scales: {
-            x: { title: { display: true, text: 'Principal Component 1 (Real Kaggle Biometrics)', color: '#a1a1aa' }, grid: { color: '#1f1f26' }, ticks: { color: '#a1a1aa' } },
-            y: { title: { display: true, text: 'Principal Component 2 (Cardiac & Workout Intensity)', color: '#a1a1aa' }, grid: { color: '#1f1f26' }, ticks: { color: '#a1a1aa' } }
-          }
-        }
+            x: {
+              title: { display: true, text: 'Principal Component 1 (Body Weight, Water & Fat Balance)', color: getCssVar('--chart-tick') },
+              grid: { color: getCssVar('--chart-grid') },
+              ticks: { color: getCssVar('--chart-tick') },
+            },
+            y: {
+              title: { display: true, text: 'Principal Component 2 (Body Comp & Session Duration)', color: getCssVar('--chart-tick') },
+              grid: { color: getCssVar('--chart-grid') },
+              ticks: { color: getCssVar('--chart-tick') },
+            },
+          },
+        },
       });
 
-      // Run initial evaluation with default athlete profile
       triggerManualEval();
     }
 
-    // 2. Playback Controls
-    function togglePlayPause() {
-      if (!videoEl.src) return;
-      const btn = document.getElementById('btn-play');
-      if (videoEl.paused) {
-        videoEl.play();
-        btn.innerHTML = "<span>⏸ PAUSE</span>";
-        processVideoFrame();
-      } else {
-        videoEl.pause();
-        btn.innerHTML = "<span>▶ PLAY</span>";
+    function readValidatedInputs() {
+      const fieldSpecs = [
+        { id: 'inp-age', key: 'Age', label: 'Age', min: 10, max: 100, required: true },
+        { id: 'inp-weight', key: 'Weight_kg', label: 'Weight (kg)', min: 30, max: 250, required: true },
+        { id: 'inp-height', key: 'Height_m', label: 'Height (m)', min: 1.2, max: 2.3, required: true },
+        { id: 'inp-dur', key: 'Session_Duration_min', label: 'Duration (min)', min: 1, max: 300, required: true },
+        { id: 'inp-maxbpm', key: 'Max_BPM', label: 'Max BPM', min: 80, max: 230, required: false },
+        { id: 'inp-avgbpm', key: 'Avg_BPM', label: 'Avg BPM', min: 50, max: 220, required: false },
+        { id: 'inp-restbpm', key: 'Resting_BPM', label: 'Resting BPM', min: 30, max: 120, required: false },
+        { id: 'inp-water', key: 'Water_Intake_liters', label: 'Water (L)', min: 0, max: 10, required: false },
+        { id: 'inp-fat', key: 'Fat_Percentage', label: 'Body Fat (%)', min: 2, max: 60, required: false },
+      ];
+
+      const values = {};
+      const errors = [];
+      fieldSpecs.forEach((spec) => {
+        const el = document.getElementById(spec.id);
+        const raw = el.value.trim();
+        el.setAttribute('aria-invalid', 'false');
+
+        if (raw === '') {
+          if (spec.required) {
+            el.setAttribute('aria-invalid', 'true');
+            errors.push(`${spec.label} is required.`);
+          }
+          return;
+        }
+        const num = Number(raw);
+        if (!Number.isFinite(num) || num < spec.min || num > spec.max) {
+          el.setAttribute('aria-invalid', 'true');
+          errors.push(`${spec.label} must be between ${spec.min} and ${spec.max}.`);
+          return;
+        }
+        values[spec.key] = num;
+      });
+
+      if (values.Max_BPM !== undefined && values.Avg_BPM !== undefined && values.Avg_BPM > values.Max_BPM) {
+        document.getElementById('inp-avgbpm').setAttribute('aria-invalid', 'true');
+        errors.push('Avg BPM cannot exceed Max BPM.');
       }
-    }
-
-    function replayVideo() {
-      if (!videoEl.src) return;
-      videoEl.currentTime = 0;
-      videoEl.play();
-      document.getElementById('btn-play').innerHTML = "<span>⏸ PAUSE</span>";
-      processVideoFrame();
-    }
-
-    function toggleLoop() {
-      videoEl.loop = !videoEl.loop;
-      const btn = document.getElementById('btn-loop');
-      if (videoEl.loop) {
-        btn.innerHTML = "<span>🔁 AUTO-LOOP: ON</span>";
-        btn.className = "btn-dark-skew px-3.5 py-1.5 text-xs font-bold border-[#e31b23] text-white";
-      } else {
-        btn.innerHTML = "<span>🔁 AUTO-LOOP: OFF</span>";
-        btn.className = "btn-dark-skew px-3.5 py-1.5 text-xs font-bold text-zinc-400";
+      if (values.Resting_BPM !== undefined && values.Avg_BPM !== undefined && values.Resting_BPM > values.Avg_BPM) {
+        document.getElementById('inp-restbpm').setAttribute('aria-invalid', 'true');
+        errors.push('Resting BPM cannot exceed Avg BPM.');
       }
-    }
-
-    function seekVideo() {
-      if (!videoEl.duration) return;
-      const val = parseFloat(document.getElementById('video-seek').value);
-      videoEl.currentTime = (val / 100) * videoEl.duration;
-    }
-
-    function formatSec(sec) {
-      if (!sec || isNaN(sec)) return "0:00";
-      const m = Math.floor(sec / 60);
-      const s = Math.floor(sec % 60).toString().padStart(2, '0');
-      return `${m}:${s}`;
-    }
-
-    videoEl.addEventListener('timeupdate', () => {
-      if (videoEl.duration) {
-        document.getElementById('video-seek').value = (videoEl.currentTime / videoEl.duration) * 100;
-        document.getElementById('video-time').innerText = `${formatSec(videoEl.currentTime)} / ${formatSec(videoEl.duration)}`;
+      if (values.Resting_BPM !== undefined && values.Max_BPM !== undefined && values.Resting_BPM > values.Max_BPM) {
+        document.getElementById('inp-restbpm').setAttribute('aria-invalid', 'true');
+        errors.push('Resting BPM cannot exceed Max BPM.');
       }
-    });
+      if (values.Weight_kg !== undefined && values.Height_m !== undefined) {
+        const bmi = values.Weight_kg / (values.Height_m ** 2);
+        if (bmi < 10 || bmi > 65) {
+          errors.push(`Computed BMI (${bmi.toFixed(1)}) must be between 10.0 and 65.0.`);
+        }
+      }
 
-    function resetTrackingStats() {
-      goodReps = 0; badReps = 0; repStage = 'down';
-      maxLeanInRep = 0; minSymInRep = 100; minAngleInRep = 180; maxAngleInRep = 0; frameCount = 0;
-      recentLeans = []; recentSyms = []; recentROMs = [];
-      angleHistoryArms = []; angleHistoryLegs = []; angleHistoryShoulders = [];
-      document.getElementById('live-good-reps').innerText = "0";
-      document.getElementById('live-bad-reps').innerText = "0";
-      document.getElementById('analysis-counter').innerText = "0 Frames";
-    }
+      const swCount = ['Max_BPM', 'Avg_BPM', 'Resting_BPM', 'Water_Intake_liters'].filter((k) => values[k] !== undefined).length;
+      const swBadge = document.getElementById('smartwatch-status');
+      swBadge.textContent = swCount === 4 ? '4/4 HR+Water Active' : `${swCount}/4 HR+Water (Rules Only)`;
 
-    function stdDev(arr) {
-      if (arr.length < 5) return 0;
-      const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
-      return Math.sqrt(arr.reduce((sq, n) => sq + Math.pow(n - mean, 2), 0) / arr.length);
+      return { values, errors };
     }
 
     function triggerManualEval() {
       syncVideoBiomechanicsToML(lastTrackedLean, lastTrackedSym, true);
     }
 
-    // 3. Send Real Kaggle Columns + Live Video Biomechanics to Backend
+    ['inp-age', 'inp-weight', 'inp-height', 'inp-dur', 'inp-maxbpm', 'inp-avgbpm', 'inp-restbpm', 'inp-water', 'inp-fat']
+      .forEach((id) => document.getElementById(id).addEventListener('change', triggerManualEval));
+
     async function syncVideoBiomechanicsToML(currentLean, currentSym, force = false) {
       const now = performance.now();
-      if (!force && (now - lastApiCallTime < 450)) return;
+      if (!force && now - lastApiCallTime < 450) return;
       lastApiCallTime = now;
 
-      lastTrackedLean = currentLean;
-      lastTrackedSym = currentSym;
+      if (currentLean !== null && currentSym !== null) {
+        lastTrackedLean = currentLean;
+        lastTrackedSym = currentSym;
+      }
 
-      const avgLean = recentLeans.length ? (recentLeans.reduce((a,b)=>a+b,0)/recentLeans.length) : currentLean;
-      const avgSym = recentSyms.length ? (recentSyms.reduce((a,b)=>a+b,0)/recentSyms.length) : currentSym;
+      const { values, errors } = readValidatedInputs();
+      if (errors.length > 0) {
+        showErrorBanner(errors.join(' '));
+        return;
+      }
 
-      const age = parseFloat(document.getElementById('inp-age').value) || 22.0;
-      const weight = parseFloat(document.getElementById('inp-weight').value) || 78.0;
-      const height = parseFloat(document.getElementById('inp-height').value) || 1.85;
-      const duration = parseFloat(document.getElementById('inp-dur').value) || 55.0;
+      const activeLean = hasVideoTelemetry
+        ? (recentLeans.length ? recentLeans.reduce((a, b) => a + b, 0) / recentLeans.length : (currentLean ?? 0))
+        : 0.0;
+      const activeSym = hasVideoTelemetry
+        ? (recentSyms.length ? recentSyms.reduce((a, b) => a + b, 0) / recentSyms.length : (currentSym ?? 100))
+        : 100.0;
 
-      const optNum = (id) => { const v = parseFloat(document.getElementById(id).value); return Number.isFinite(v) ? v : undefined; };
-      // send only the values the user typed
+      const selectedEx = document.getElementById('exercise-type').value;
       const payload = {
-        Age: age, Weight_kg: weight, Height_m: height, Session_Duration_min: duration,
-        Max_BPM: optNum('inp-maxbpm'), Avg_BPM: optNum('inp-avgbpm'),
-        Resting_BPM: optNum('inp-restbpm'), Water_Intake_liters: optNum('inp-water'),
-        torso_lean_deg: Number(avgLean.toFixed(1)),
-        symmetry_score: Number(avgSym.toFixed(1)),
-        bad_reps: badReps
+        ...values,
+        torso_lean_deg: Number(activeLean.toFixed(1)),
+        symmetry_score: Number(activeSym.toFixed(1)),
+        bad_reps: hasVideoTelemetry ? badReps : 0,
+        exercise_type: selectedEx,
       };
+
+      if (activeFetchController) activeFetchController.abort();
+      activeFetchController = new AbortController();
+      const requestId = ++latestRequestId;
 
       try {
         const res = await fetch('/api/analyze-biometrics', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          signal: activeFetchController.signal,
         });
-        if (!res.ok) { console.error("API validation error:", await res.text()); return; }
+
+        if (requestId !== latestRequestId) return;
+
+        if (!res.ok) {
+          const errJson = await res.json().catch(() => ({}));
+          const detail = Array.isArray(errJson.detail)
+            ? errJson.detail.map((d) => d.msg).join('; ')
+            : (errJson.detail || `Validation error (${res.status})`);
+          showErrorBanner(detail);
+          return;
+        }
+
         const data = await res.json();
+        if (requestId !== latestRequestId) return;
+        showErrorBanner('');
         renderVideoMLVerdict(data.ml_results, payload);
-      } catch (e) {
-        console.error("ML sync error:", e);
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+        showErrorBanner(`Analysis request failed: ${err.message}`);
       }
     }
 
-    // arabic text for the heart / hydration reasons sent by the server
     function physioFlagAr(f) {
       if (f.startsWith('max HR')) return 'أقصى نبض أعلى من 96% من الحد المتوقع لسنك';
-      if (f.startsWith('high average')) return 'متوسط النبض عالي مع شرب مياه قليل';
-      if (f.startsWith('high resting')) return 'نبض الراحة عالي مع جلسة طويلة';
+      if (f.startsWith('high average HR')) return 'متوسط النبض عالي مع شرب مياه قليل';
+      if (f.startsWith('sustained average HR')) return 'متوسط النبض أعلى من 90% من الحد المتوقع';
+      if (f.startsWith('high resting HR')) return 'نبض الراحة عالي مع جلسة طويلة';
+      if (f.startsWith('elevated resting HR')) return 'نبض الراحة مرتفع فوق 100 نبضة/دقيقة';
       return f;
     }
 
     function renderVideoMLVerdict(ml, metrics) {
-      document.getElementById('out-pca').innerText = `PCA: [${ml.pca_coordinates.join(', ')}]`;
-      document.getElementById('out-cluster').innerText = ml.cluster_profile;
-      document.getElementById('out-anomaly').innerText = ml.anomaly_status;
-      document.getElementById('out-calories').innerText = ml.predicted_calories_kcal;
+      document.getElementById('out-pca').textContent = `PCA: [${ml.pca_coordinates.join(', ')}]`;
+      const clusterEl = document.getElementById('out-cluster');
+      clusterEl.textContent = '';
+      const arMatch = ml.cluster_profile.match(/^(.*)\s+\(([^)]+)\)$/);
+      if (arMatch) {
+        const enSpan = document.createElement('span');
+        enSpan.dir = 'ltr';
+        enSpan.textContent = arMatch[1];
+        const arDiv = document.createElement('div');
+        arDiv.dir = 'rtl';
+        arDiv.lang = 'ar';
+        arDiv.style.fontFamily = 'var(--font-arabic)';
+        arDiv.style.color = 'var(--text-secondary)';
+        arDiv.style.fontSize = '0.875rem';
+        arDiv.textContent = arMatch[2];
+        clusterEl.appendChild(enSpan);
+        clusterEl.appendChild(arDiv);
+      } else {
+        clusterEl.textContent = ml.cluster_profile;
+      }
+      document.getElementById('out-anomaly').textContent = ml.anomaly_status;
+      document.getElementById('out-calories').textContent = String(ml.predicted_calories_kcal);
+
+      const imputedList = ml.imputed_fields || [];
+      document.getElementById('imputed-note').textContent = imputedList.length
+        ? `Median-imputed fields: ${imputedList.join(', ')}`
+        : 'All biometric fields provided by user (no imputation).';
 
       if (pcaChartInstance) {
         pcaChartInstance.data.datasets[0].data = [{ x: ml.pca_coordinates[0], y: ml.pca_coordinates[1] }];
@@ -656,211 +1481,464 @@
       }
 
       const risk = ml.injury_risk_probability;
-      document.getElementById('out-risk-pct').innerText = risk + '%';
-      const physioTxt = ml.physio_risk_pct === null ? 'n/a (enter heart-rate data)' : ml.physio_risk_pct + '%';
-      document.getElementById('out-risk-label').innerText = `${ml.injury_risk_label} | movement: ${ml.movement_risk_pct}% | physiological: ${physioTxt}`;
+      const riskPctEl = document.getElementById('out-risk-pct');
+      riskPctEl.textContent = `${risk}%`;
+      const physioTxt = ml.physio_risk_pct === null ? 'n/a (enter all 4 HR+Water fields)' : `${ml.physio_risk_pct}%`;
+      document.getElementById('out-risk-label').textContent =
+        `${ml.injury_risk_label} | Movement: ${ml.movement_risk_pct}% | Physiological: ${physioTxt}`;
 
       const bar = document.getElementById('risk-bar');
-      bar.style.width = Math.max(5, risk) + '%';
+      bar.style.width = `${Math.max(4, risk)}%`;
 
       const anomCard = document.getElementById('anomaly-card');
-      const outAnom = document.getElementById('out-anomaly');
       const coachBox = document.getElementById('coach-verdict-box');
       const coachTitle = document.getElementById('coach-verdict-title');
       const coachDesc = document.getElementById('coach-verdict-desc');
 
-      if (risk >= 50 || ml.is_anomaly || badReps > goodReps) {
-        bar.className = "bg-[#e31b23] h-full transition-all duration-300";
-        document.getElementById('out-risk-pct').className = "font-gym text-3xl font-bold text-[#e31b23]";
-        anomCard.className = "p-3.5 bg-red-950/40 border border-[#e31b23] transition";
-        outAnom.className = "font-gym text-base font-bold text-[#e31b23] mt-0.5";
+      const hasDanger = risk >= 50 || ml.is_anomaly;
+      const hasFormCaution = !hasDanger && hasVideoTelemetry && badReps > 0;
 
-        coachBox.className = "mt-3 p-4 bg-red-950/50 border-l-4 border-[#e31b23] transition-all";
-        coachTitle.className = "font-bold text-sm text-red-200";
-        coachTitle.innerText = `⚠️ تحذير الكوتش: خطر إصابة أو إجهاد مرتفع (${risk}%)`;
+      if (hasDanger) {
+        bar.className = 'progress-fill danger';
+        riskPctEl.style.color = 'var(--danger-text)';
+        anomCard.className = 'result-card danger';
+        coachBox.className = 'alert-box danger rtl-block';
+        coachTitle.textContent = `تحذير الكوتش: خطر إصابة أو إجهاد مرتفع (${risk}%)`;
 
-        let reasons = [];
-        if (badReps > 0) reasons.push(`تم رصد ${badReps} عدات بأداء خاطئ (Bad Reps)`);
-        if (metrics.torso_lean_deg > 17) reasons.push(`ميلان الظهر وصل إلى ${metrics.torso_lean_deg}°`);
-        if (metrics.symmetry_score < 82) reasons.push(`اختلال التوازن بين الجانبين (${metrics.symmetry_score}%)`);
-        const movementProblem = reasons.length > 0;
-        (ml.physio_rule_flags || []).forEach(f => reasons.push(physioFlagAr(f)));
-        if (!reasons.length) reasons.push('قيم غير معتادة مقارنة ببقية المتدربين');
-        coachDesc.className = "text-xs text-red-100 mt-1 leading-relaxed";
-        const tip = movementProblem ? 'اضبط استقامة الظهر وتوازن المفاصل لتجنب الإصابة.' : 'راجع النبض وشرب المياه ومدة التمرين.';
-        coachDesc.innerText = `تشخيص الفيديو + داتا Kaggle: ${reasons.join(' + ')}. ${tip}`;
+        const reasons = [];
+        if (hasVideoTelemetry) {
+          (ml.movement_flags || []).forEach((mf) => reasons.push(mf));
+        }
+        (ml.physio_rule_flags || []).forEach((f) => reasons.push(physioFlagAr(f)));
+        (ml.clinical_anomaly_flags || []).forEach((cf) => reasons.push(cf));
+        if (!reasons.length) reasons.push('قيم غير معتادة مقارنة بباقي المتدربين');
+        coachDesc.textContent = `الأسباب المرصودة: ${reasons.join(' + ')}.`;
+      } else if (hasFormCaution) {
+        bar.className = 'progress-fill';
+        riskPctEl.style.color = 'var(--warn-text)';
+        anomCard.className = 'result-card';
+        coachBox.className = 'alert-box warn rtl-block';
+        coachTitle.textContent = `ملاحظة أداء: تم رصد ${badReps} عدات غير مكتملة أو تحتاج ضبط (${risk}%)`;
+        coachDesc.textContent = `متوسط الانحراف ${metrics.torso_lean_deg}° والتوازن ${metrics.symmetry_score}%.`;
+      } else if (!hasVideoTelemetry) {
+        bar.className = 'progress-fill';
+        riskPctEl.style.color = 'var(--safe-text)';
+        anomCard.className = 'result-card safe';
+        coachBox.className = 'alert-box safe rtl-block';
+        coachTitle.textContent = `المؤشرات الحيوية مستقرة — ارفع فيديو التمرين لتقييم الفورم`;
+        coachDesc.textContent = `تم حساب الحرق المتوقع (${ml.predicted_calories_kcal} kcal) والـ Cluster. عند رفع الفيديو سيتم دمج زوايا المفاصل لايف.`;
       } else {
-        bar.className = "bg-emerald-500 h-full transition-all duration-300";
-        document.getElementById('out-risk-pct').className = "font-gym text-3xl font-bold text-emerald-400";
-        anomCard.className = "p-3.5 bg-[#18181c] border border-emerald-600/60 transition";
-        outAnom.className = "font-gym text-base font-bold text-emerald-400 mt-0.5";
-
-        coachBox.className = "mt-3 p-4 bg-emerald-950/30 border-l-4 border-emerald-500 transition-all";
-        coachTitle.className = "font-bold text-sm text-emerald-300";
-        coachTitle.innerText = `✅ عاش يا بطل! الأداء الحركي والمؤشرات الحيوية ممتازة (${(100 - risk).toFixed(1)}% Safety)`;
-        coachDesc.className = "text-xs text-emerald-100 mt-1 leading-relaxed";
-        coachDesc.innerText = `توازن المفاصل (${metrics.symmetry_score}%) واستقامة الظهر (${metrics.torso_lean_deg}°) متوافقة مع الفئة المثالية في داتا Kaggle.`;
+        bar.className = 'progress-fill';
+        riskPctEl.style.color = 'var(--safe-text)';
+        anomCard.className = 'result-card safe';
+        coachBox.className = 'alert-box safe rtl-block';
+        coachTitle.textContent = `أداء حركي ومؤشرات حيوية ممتازة (${(100 - risk).toFixed(1)}% أمان)`;
+        coachDesc.textContent = `توازن المفاصل (${metrics.symmetry_score}%) وانحراف الجسم (${metrics.torso_lean_deg}°) ضمن النطاق الآمن.`;
       }
     }
 
-    // 4. MediaPipe Pose Engine
-    // works in pixels so the angle isn't stretched on wide videos
+    // Playback Controls
+    document.getElementById('btn-play').addEventListener('click', () => {
+      if (!videoEl.src) return;
+      const btn = document.getElementById('btn-play');
+      if (videoEl.paused) {
+        videoEl.play();
+        btn.textContent = 'Pause';
+        document.getElementById('sync-badge').textContent = 'Tracking Active';
+        scheduleNextFrame();
+      } else {
+        videoEl.pause();
+        btn.textContent = 'Play';
+        document.getElementById('sync-badge').textContent = 'Paused';
+      }
+    });
+
+    document.getElementById('btn-replay').addEventListener('click', () => {
+      if (!videoEl.src) return;
+      videoEl.currentTime = 0;
+      videoEl.play();
+      document.getElementById('btn-play').textContent = 'Pause';
+      document.getElementById('sync-badge').textContent = 'Tracking Active';
+      scheduleNextFrame();
+    });
+
+    document.getElementById('btn-loop').addEventListener('click', () => {
+      videoEl.loop = !videoEl.loop;
+      const btn = document.getElementById('btn-loop');
+      btn.setAttribute('aria-pressed', String(videoEl.loop));
+      btn.textContent = videoEl.loop ? 'Auto-Loop: On' : 'Auto-Loop: Off';
+      btn.className = videoEl.loop ? 'btn btn-active' : 'btn';
+    });
+
+    document.getElementById('video-seek').addEventListener('input', () => {
+      if (!videoEl.duration) return;
+      const val = parseFloat(document.getElementById('video-seek').value);
+      videoEl.currentTime = (val / 100) * videoEl.duration;
+    });
+
+    function formatSec(sec) {
+      if (!sec || Number.isNaN(sec)) return '0:00';
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    videoEl.addEventListener('timeupdate', () => {
+      if (videoEl.duration) {
+        document.getElementById('video-seek').value = String((videoEl.currentTime / videoEl.duration) * 100);
+        document.getElementById('video-time').textContent = `${formatSec(videoEl.currentTime)} / ${formatSec(videoEl.duration)}`;
+      }
+    });
+
+    videoEl.addEventListener('ended', () => {
+      if (!videoEl.loop) {
+        document.getElementById('btn-play').textContent = 'Play';
+        document.getElementById('sync-badge').textContent = 'Completed';
+      }
+    });
+
+    videoEl.addEventListener('error', () => {
+      showErrorBanner('Could not decode the selected video file. Try MP4 (H.264) or WebM.');
+    });
+
+    function stdDev(arr) {
+      if (arr.length < 5) return 0;
+      const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+      return Math.sqrt(arr.reduce((sq, n) => sq + (n - mean) ** 2, 0) / arr.length);
+    }
+
     function calcAngle2D(a, b, c) {
-      const W = videoEl.videoWidth || 1, H = videoEl.videoHeight || 1;
+      const W = videoEl.videoWidth || 1;
+      const H = videoEl.videoHeight || 1;
       const rad = Math.atan2((c.y - b.y) * H, (c.x - b.x) * W) - Math.atan2((a.y - b.y) * H, (a.x - b.x) * W);
-      let ang = Math.abs(rad * 180.0 / Math.PI);
+      let ang = Math.abs((rad * 180.0) / Math.PI);
       if (ang > 180.0) ang = 360.0 - ang;
       return ang;
     }
-    // skips the frame if the shoulders or hips are not clearly visible
-    function torsoVisible(lm) {
-      return [11, 12, 23, 24].every(i => (lm[i].visibility ?? 1) >= 0.5);
+
+    function sideVisible(lm, indices) {
+      return indices.every((i) => lm[i] && (lm[i].visibility ?? 1) >= 0.4);
+    }
+
+    function getVisibleSides(lm, cfg) {
+      const reqL = [...new Set([11, 23, ...(cfg.jointsL || [])])];
+      const reqR = [...new Set([12, 24, ...(cfg.jointsR || [])])];
+      return {
+        leftVisible: sideVisible(lm, reqL),
+        rightVisible: sideVisible(lm, reqR),
+      };
+    }
+
+    function computeVerticalLean(lm, vw, vh) {
+      const hasL = sideVisible(lm, [11, 23]);
+      const hasR = sideVisible(lm, [12, 24]);
+      let shX, shY, hipX, hipY;
+      if (hasL && hasR) {
+        shX = ((lm[11].x + lm[12].x) / 2.0) * vw;
+        shY = ((lm[11].y + lm[12].y) / 2.0) * vh;
+        hipX = ((lm[23].x + lm[24].x) / 2.0) * vw;
+        hipY = ((lm[23].y + lm[24].y) / 2.0) * vh;
+      } else if (hasL) {
+        shX = lm[11].x * vw;
+        shY = lm[11].y * vh;
+        hipX = lm[23].x * vw;
+        hipY = lm[23].y * vh;
+      } else {
+        shX = lm[12].x * vw;
+        shY = lm[12].y * vh;
+        hipX = lm[24].x * vw;
+        hipY = lm[24].y * vh;
+      }
+      return Math.abs((Math.atan2(Math.abs(shX - hipX), Math.max(Math.abs(hipY - shY), 1e-6)) * 180) / Math.PI);
+    }
+
+    function handlePoseResults(results) {
+      const vw = videoEl.videoWidth || (results.image && results.image.width) || 640;
+      const vh = videoEl.videoHeight || (results.image && results.image.height) || 360;
+      if (canvasEl.width !== vw || canvasEl.height !== vh) {
+        canvasEl.width = vw;
+        canvasEl.height = vh;
+      }
+      canvasCtx.save();
+      canvasCtx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+      if (results.image) {
+        canvasCtx.drawImage(results.image, 0, 0, canvasEl.width, canvasEl.height);
+      }
+
+      const lm = results.poseLandmarks;
+      if (lm) {
+        const selectedEx = document.getElementById('exercise-type').value;
+        let activeEx = selectedEx;
+
+        const armLOk = sideVisible(lm, [11, 13, 15]);
+        const armROk = sideVisible(lm, [12, 14, 16]);
+        if (armLOk || armROk) {
+          const armVal = armLOk && armROk
+            ? (calcAngle2D(lm[11], lm[13], lm[15]) + calcAngle2D(lm[12], lm[14], lm[16])) / 2
+            : (armLOk ? calcAngle2D(lm[11], lm[13], lm[15]) : calcAngle2D(lm[12], lm[14], lm[16]));
+          angleHistoryArms.push(armVal);
+          if (angleHistoryArms.length > 25) angleHistoryArms.shift();
+        }
+
+        const legLOk = sideVisible(lm, [23, 25, 27]);
+        const legROk = sideVisible(lm, [24, 26, 28]);
+        if (legLOk || legROk) {
+          const legVal = legLOk && legROk
+            ? (calcAngle2D(lm[23], lm[25], lm[27]) + calcAngle2D(lm[24], lm[26], lm[28])) / 2
+            : (legLOk ? calcAngle2D(lm[23], lm[25], lm[27]) : calcAngle2D(lm[24], lm[26], lm[28]));
+          angleHistoryLegs.push(legVal);
+          if (angleHistoryLegs.length > 25) angleHistoryLegs.shift();
+        }
+
+        const shLOk = sideVisible(lm, [23, 11, 13]);
+        const shROk = sideVisible(lm, [24, 12, 14]);
+        if (shLOk || shROk) {
+          const shVal = shLOk && shROk
+            ? (calcAngle2D(lm[23], lm[11], lm[13]) + calcAngle2D(lm[24], lm[12], lm[14])) / 2
+            : (shLOk ? calcAngle2D(lm[23], lm[11], lm[13]) : calcAngle2D(lm[24], lm[12], lm[14]));
+          angleHistoryShoulders.push(shVal);
+          if (angleHistoryShoulders.length > 25) angleHistoryShoulders.shift();
+        }
+
+        if (selectedEx === 'auto') {
+          const varArms = stdDev(angleHistoryArms);
+          const varLegs = stdDev(angleHistoryLegs);
+          const varSh = stdDev(angleHistoryShoulders);
+          if (varLegs > varArms && varLegs > varSh && varLegs > 4) {
+            activeEx = 'squat';
+            document.getElementById('detected-move-badge').textContent = 'Auto: Squat';
+          } else if (varSh > varArms && varSh > 5) {
+            activeEx = 'shoulder_press';
+            document.getElementById('detected-move-badge').textContent = 'Auto: Shoulder Press';
+          } else {
+            activeEx = 'bicep_curl';
+            document.getElementById('detected-move-badge').textContent = 'Auto: Bicep Curl';
+          }
+          if (lastAutoEx !== activeEx) {
+            lastAutoEx = activeEx;
+            resetRepCycleState();
+          }
+        } else {
+          document.getElementById('detected-move-badge').textContent = selectedEx.replace('_', ' ').toUpperCase();
+        }
+
+        const cfg = EXERCISE_CONFIG[activeEx] || EXERCISE_CONFIG.bicep_curl;
+        updateScoreboardHeaders(activeEx);
+
+        const { leftVisible, rightVisible } = getVisibleSides(lm, cfg);
+        let trackedThisFrame = false;
+        let isBadFrame = false;
+
+        if (leftVisible || rightVisible) {
+          trackedThisFrame = true;
+          frameCount++;
+          hasVideoTelemetry = true;
+          document.getElementById('analysis-counter').textContent = `${frameCount} Frames`;
+          document.getElementById('sync-badge').textContent = 'Live Tracking Active';
+
+          const [i1L, i2L, i3L] = cfg.jointsL || [11, 13, 15];
+          const [i1R, i2R, i3R] = cfg.jointsR || [12, 14, 16];
+          const leftAngle = leftVisible ? calcAngle2D(lm[i1L], lm[i2L], lm[i3L]) : null;
+          const rightAngle = rightVisible ? calcAngle2D(lm[i1R], lm[i2R], lm[i3R]) : null;
+          const bothSides = leftVisible && rightVisible;
+          const mainAngle = bothSides
+            ? (leftAngle + rightAngle) / 2.0
+            : (leftVisible ? leftAngle : rightAngle);
+          const symmetry = bothSides
+            ? Math.max(50, Math.min(100, 100 - Math.abs(leftAngle - rightAngle) * 1.1))
+            : (lastTrackedSym ?? 100.0);
+
+          let lean = 0;
+          if (cfg.leanMetric === 'body_line') {
+            const bodyLOk = sideVisible(lm, [11, 23, 27]);
+            const bodyROk = sideVisible(lm, [12, 24, 28]);
+            if (bodyLOk && bodyROk) {
+              const bodyAvg = (calcAngle2D(lm[11], lm[23], lm[27]) + calcAngle2D(lm[12], lm[24], lm[28])) / 2.0;
+              lean = Math.abs(180.0 - bodyAvg);
+            } else if (bodyLOk) {
+              lean = Math.abs(180.0 - calcAngle2D(lm[11], lm[23], lm[27]));
+            } else if (bodyROk) {
+              lean = Math.abs(180.0 - calcAngle2D(lm[12], lm[24], lm[28]));
+            } else {
+              lean = Math.abs(90.0 - computeVerticalLean(lm, vw, vh));
+            }
+          } else {
+            lean = computeVerticalLean(lm, vw, vh);
+          }
+
+          recentLeans.push(lean);
+          if (recentLeans.length > 40) recentLeans.shift();
+          if (bothSides) {
+            recentSyms.push(symmetry);
+            if (recentSyms.length > 40) recentSyms.shift();
+          }
+
+          const nowTs = performance.now();
+          const dt = lastFrameTs === null ? 0 : Math.min(0.25, (nowTs - lastFrameTs) / 1000.0);
+          lastFrameTs = nowTs;
+
+          if (cfg.mode === 'hold') {
+            const aligned = mainAngle >= (cfg.minHoldAngle || 155) && (!bothSides || symmetry >= cfg.symmetryFloor);
+            if (aligned) {
+              plankHoldSec += dt;
+            } else {
+              plankBadSec += dt;
+              badReps = Math.floor(plankBadSec / 2.0);
+            }
+            document.getElementById('live-good-reps').textContent = plankHoldSec.toFixed(1);
+            document.getElementById('live-bad-reps').textContent = plankBadSec.toFixed(1);
+          } else {
+            maxLeanInRep = Math.max(maxLeanInRep, lean);
+            minSymInRep = Math.min(minSymInRep, symmetry);
+            minAngleInRep = Math.min(minAngleInRep, mainAngle);
+            maxAngleInRep = Math.max(maxAngleInRep, mainAngle);
+
+            if (cfg.direction === 'extend') {
+              if (mainAngle <= cfg.startThreshold) {
+                if (repStage === 'peak') {
+                  const rom = maxAngleInRep - minAngleInRep;
+                  const isBad = maxLeanInRep > cfg.maxAllowedLean || minSymInRep < cfg.symmetryFloor || rom < cfg.minRom;
+                  if (isBad) badReps++;
+                  else goodReps++;
+                  resetRepCycleState();
+                }
+                repStage = 'start';
+              }
+              if (mainAngle >= cfg.peakThreshold && repStage === 'start') {
+                repStage = 'peak';
+              }
+            } else {
+              if (mainAngle >= cfg.startThreshold) {
+                if (repStage === 'peak') {
+                  const rom = maxAngleInRep - minAngleInRep;
+                  const isBad = maxLeanInRep > cfg.maxAllowedLean || minSymInRep < cfg.symmetryFloor || rom < cfg.minRom;
+                  if (isBad) badReps++;
+                  else goodReps++;
+                  resetRepCycleState();
+                }
+                repStage = 'start';
+              }
+              if (mainAngle <= cfg.peakThreshold && repStage === 'start') {
+                repStage = 'peak';
+              }
+            }
+            document.getElementById('live-good-reps').textContent = String(goodReps);
+            document.getElementById('live-bad-reps').textContent = String(badReps);
+          }
+
+          document.getElementById('live-angle').textContent = `${Math.round(mainAngle)}°`;
+          document.getElementById('live-lean').textContent = `${Math.round(lean)}°`;
+          document.getElementById('live-sym').textContent = bothSides ? `${Math.round(symmetry)}%` : '1-Side';
+
+          isBadFrame = lean > cfg.maxAllowedLean || (bothSides && symmetry < cfg.symmetryFloor);
+          syncVideoBiomechanicsToML(lean, symmetry);
+        } else {
+          document.getElementById('sync-badge').textContent = 'Pose Detected (Adjust Angle)';
+        }
+
+        // Always render MediaPipe skeleton overlay whenever landmarks exist
+        const skeletonColor = !trackedThisFrame ? '#38bdf8' : (isBadFrame ? '#ef4444' : '#10b981');
+        if (window.drawConnectors && window.POSE_CONNECTIONS) {
+          drawConnectors(canvasCtx, lm, POSE_CONNECTIONS, { color: skeletonColor, lineWidth: 4 });
+          drawLandmarks(canvasCtx, lm, { color: '#ffffff', fillColor: skeletonColor, lineWidth: 2, radius: 4 });
+        }
+      }
+      canvasCtx.restore();
+    }
+
+    function ensurePoseReady() {
+      if (!poseEngine) return Promise.resolve();
+      if (!poseInitPromise) {
+        poseInitPromise = typeof poseEngine.initialize === 'function'
+          ? poseEngine.initialize().catch((err) => {
+              poseInitPromise = null;
+              throw err;
+            })
+          : Promise.resolve();
+      }
+      return poseInitPromise;
     }
 
     if (window.Pose) {
       poseEngine = new Pose({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}`,
       });
       poseEngine.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+      poseEngine.onResults(handlePoseResults);
+    } else {
+      showErrorBanner('MediaPipe Pose script could not load. Check internet connection to analyze workout video.');
+    }
 
-      poseEngine.onResults((results) => {
-        canvasEl.width = videoEl.videoWidth || 640;
-        canvasEl.height = videoEl.videoHeight || 360;
-        canvasCtx.save();
-        canvasCtx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-        canvasCtx.drawImage(results.image, 0, 0, canvasEl.width, canvasEl.height);
-
-        if (results.poseLandmarks && torsoVisible(results.poseLandmarks)) {
-          frameCount++;
-          document.getElementById('analysis-counter').innerText = `${frameCount} Frames`;
-          document.getElementById('sync-badge').innerText = "🔴 LIVE TRACKING ACTIVE";
-          document.getElementById('sync-badge').className = "text-xs font-bold uppercase tracking-wider text-[#e31b23]";
-
-          const lm = results.poseLandmarks;
-          let selectedEx = document.getElementById('exercise-type').value;
-          let activeEx = selectedEx;
-
-          const armL = calcAngle2D(lm[11], lm[13], lm[15]);
-          const armR = calcAngle2D(lm[12], lm[14], lm[16]);
-          const legL = calcAngle2D(lm[23], lm[25], lm[27]);
-          const legR = calcAngle2D(lm[24], lm[26], lm[28]);
-          const shL  = calcAngle2D(lm[23], lm[11], lm[13]);
-          const shR  = calcAngle2D(lm[24], lm[12], lm[14]);
-
-          angleHistoryArms.push((armL + armR) / 2); if (angleHistoryArms.length > 25) angleHistoryArms.shift();
-          angleHistoryLegs.push((legL + legR) / 2); if (angleHistoryLegs.length > 25) angleHistoryLegs.shift();
-          angleHistoryShoulders.push((shL + shR) / 2); if (angleHistoryShoulders.length > 25) angleHistoryShoulders.shift();
-
-          if (selectedEx === 'auto') {
-            const varArms = stdDev(angleHistoryArms);
-            const varLegs = stdDev(angleHistoryLegs);
-            const varSh   = stdDev(angleHistoryShoulders);
-
-            if (varLegs > varArms && varLegs > varSh && varLegs > 4) {
-              activeEx = 'squat';
-              document.getElementById('detected-move-badge').innerText = "Auto: Lower Body / Squat";
-            } else if (varSh > varArms && varSh > 5) {
-              activeEx = 'shoulder_press';
-              document.getElementById('detected-move-badge').innerText = "Auto: Shoulders / Press";
-            } else {
-              activeEx = 'bicep_curl';
-              document.getElementById('detected-move-badge').innerText = "Auto: Upper Body / Arms";
-            }
-          } else {
-            document.getElementById('detected-move-badge').innerText = selectedEx.replace('_', ' ').toUpperCase();
-          }
-
-          const cfg = EXERCISE_CONFIG[activeEx] || EXERCISE_CONFIG.bicep_curl;
-          const [i1L, i2L, i3L] = cfg.jointsL || [11, 13, 15];
-          const [i1R, i2R, i3R] = cfg.jointsR || [12, 14, 16];
-
-          const leftAngle = calcAngle2D(lm[i1L], lm[i2L], lm[i3L]);
-          const rightAngle = calcAngle2D(lm[i1R], lm[i2R], lm[i3R]);
-          const mainAngle = (leftAngle + rightAngle) / 2.0;
-
-          const symmetry = Math.max(50, Math.min(100, 100 - Math.abs(leftAngle - rightAngle) * 1.1));
-
-          const VW = videoEl.videoWidth || 1, VH = videoEl.videoHeight || 1;
-          const midShX = (lm[11].x + lm[12].x) / 2.0 * VW;
-          const midShY = (lm[11].y + lm[12].y) / 2.0 * VH;
-          const midHipX = (lm[23].x + lm[24].x) / 2.0 * VW;
-          const midHipY = (lm[23].y + lm[24].y) / 2.0 * VH;
-          const lean = Math.abs(Math.atan2(Math.abs(midShX - midHipX), Math.max(Math.abs(midHipY - midShY), 1e-6)) * 180 / Math.PI);
-
-          recentLeans.push(lean); if (recentLeans.length > 40) recentLeans.shift();
-          recentSyms.push(symmetry); if (recentSyms.length > 40) recentSyms.shift();
-
-          maxLeanInRep = Math.max(maxLeanInRep, lean);
-          minSymInRep = Math.min(minSymInRep, symmetry);
-          minAngleInRep = Math.min(minAngleInRep, mainAngle);
-          maxAngleInRep = Math.max(maxAngleInRep, mainAngle);
-
-          if (mainAngle > cfg.downThreshold) {
-            if (repStage === 'up') {
-              const rom = maxAngleInRep - minAngleInRep;
-              recentROMs.push(rom); if (recentROMs.length > 15) recentROMs.shift();
-
-              const isBadRep = (maxLeanInRep > cfg.maxAllowedLean || minSymInRep < 78.0 || rom < 35.0);
-              if (isBadRep) { badReps++; } else { goodReps++; }
-              maxLeanInRep = 0; minSymInRep = 100; minAngleInRep = 180; maxAngleInRep = 0;
-            }
-            repStage = 'down';
-          }
-          if (mainAngle < cfg.upThreshold && repStage === 'down') {
-            repStage = 'up';
-          }
-
-          document.getElementById('live-good-reps').innerText = goodReps;
-          document.getElementById('live-bad-reps').innerText = badReps;
-          document.getElementById('live-angle').innerText = Math.round(mainAngle) + '°';
-          document.getElementById('live-lean').innerText = Math.round(lean) + '°';
-          document.getElementById('live-sym').innerText = Math.round(symmetry) + '%';
-
-          const isBadFrame = (lean > cfg.maxAllowedLean || symmetry < 78.0);
-          drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {
-            color: isBadFrame ? '#e31b23' : '#10b981',
-            lineWidth: 4
-          });
-          drawLandmarks(canvasCtx, results.poseLandmarks, {
-            color: '#ffffff',
-            fillColor: isBadFrame ? '#e31b23' : '#10b981',
-            lineWidth: 2,
-            radius: 4.5
-          });
-
-          syncVideoBiomechanicsToML(lean, symmetry);
-        }
-        canvasCtx.restore();
-      });
+    function scheduleNextFrame() {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      if (!videoEl.paused && !videoEl.ended && poseEngine) {
+        rafId = requestAnimationFrame(processVideoFrame);
+      }
     }
 
     async function processVideoFrame() {
-      if (!videoEl.paused && !videoEl.ended && poseEngine) {
-        await poseEngine.send({ image: videoEl });
-        requestAnimationFrame(processVideoFrame);
+      rafId = null;
+      if (videoEl.paused || videoEl.ended || !poseEngine || isProcessingFrame) return;
+      if (videoEl.readyState < 2 || videoEl.videoWidth === 0) {
+        rafId = requestAnimationFrame(processVideoFrame);
+        return;
+      }
+      isProcessingFrame = true;
+      try {
+        await ensurePoseReady();
+        if (!videoEl.paused && !videoEl.ended) {
+          lastPoseTimestampMs = Math.max(lastPoseTimestampMs + 1, Math.floor(performance.now()));
+          await poseEngine.send({ image: videoEl }, lastPoseTimestampMs);
+        }
+      } catch (err) {
+        showErrorBanner(`Pose frame error: ${err.message}`);
+      } finally {
+        isProcessingFrame = false;
+      }
+      if (!videoEl.paused && !videoEl.ended) {
+        rafId = requestAnimationFrame(processVideoFrame);
       }
     }
+
+    videoEl.addEventListener('playing', scheduleNextFrame);
 
     document.getElementById('video-upload').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
+      document.getElementById('file-name-label').textContent = file.name;
       document.getElementById('video-placeholder').classList.add('hidden');
       document.getElementById('btn-play').disabled = false;
       document.getElementById('btn-replay').disabled = false;
       document.getElementById('video-seek').disabled = false;
-      document.getElementById('btn-play').innerHTML = "<span>⏸ PAUSE</span>";
+      document.getElementById('btn-play').textContent = 'Pause';
+
+      if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+      currentBlobUrl = URL.createObjectURL(file);
 
       resetTrackingStats();
-      videoEl.src = URL.createObjectURL(file);
+      document.getElementById('sync-badge').textContent = 'Initializing Pose Model...';
+      videoEl.src = currentBlobUrl;
       videoEl.loop = true;
-      videoEl.onloadeddata = () => {
-        videoEl.play();
-        processVideoFrame();
+      videoEl.onloadeddata = async () => {
+        try {
+          await videoEl.play();
+          scheduleNextFrame();
+        } catch (err) {
+          showErrorBanner(`Video playback failed: ${err.message}`);
+        }
       };
     });
 
-    window.onload = loadOverview;
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+      applyTheme(savedTheme);
+      loadOverview();
+      ensurePoseReady().catch(() => {});
+    });
   </script>
 </body>
 </html>

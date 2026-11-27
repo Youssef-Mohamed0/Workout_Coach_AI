@@ -1,0 +1,25 @@
+# Python bytecode & caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Virtual environments & local env secrets
+.venv/
+venv/
+ENV/
+.env
+.env.*
+
+# Test coverage & temporary artifacts
+.coverage
+htmlcov/
+.playwright-mcp/
+
+# Jupyter & OS clutter
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+desktop.ini
